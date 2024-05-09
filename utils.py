@@ -67,20 +67,19 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
     SP_fix_dur     0, bla, bla, 0
     SN_len         original sentence length without start and end tokens
     """
-    SN_ids = []
+    SN_ids, SN_pred, SN_word_freq = [], [], []
     SN_input_ids, SN_attention_mask, SN_WORD_len = [], [], []
     SP_input_ids, SP_attention_mask = [], []
     SP_ordinal_pos, SP_landing_pos, SP_fix_dur = [], [], []
     sub_id_list = []
     for sn_id in sn_list:
-        #print('sub_id:', sub_id)
         #process sentence sequence
         sn_df = eyemovement_df[eyemovement_df.sn==sn_id]
-    #	print("sn_df", sn_df)
         sn = word_info_df[word_info_df.SN == sn_id]
-    #	print("sn", sn)
         sn_str = ''.join(sn.WORD.values)
         sn_word_len = compute_BSC_word_length(sn)
+        predictability = sn.PRED.values
+        word_freq = sn.WF_BLI.values
 
         #tokenization and padding
         tokenizer.padding_side = 'right'
@@ -135,14 +134,16 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
             SN_WORD_len.append(sn_word_len)
             sub_id_list.append(sub_id)
             SN_ids.append(sn_id)
-
-
+            SN_pred.append(predictability)
+            SN_word_freq.append(word_freq)
 
     #padding for batch computation
     SP_ordinal_pos = pad_seq(SP_ordinal_pos, max_len=(cf["max_sp_len"]), pad_value=cf["max_sn_len"])
     SP_fix_dur = pad_seq(SP_fix_dur, max_len=(cf["max_sp_len"]), pad_value=0)
     SP_landing_pos = pad_seq(SP_landing_pos, cf["max_sp_len"], pad_value=0, dtype=np.float32)
     SN_WORD_len = pad_seq_with_nan(SN_WORD_len, cf["max_sn_len"], dtype=np.float32)
+    SN_pred = pad_seq_with_nan(SN_pred, cf["max_sn_len"], dtype=np.float32)
+    SN_word_freq = pad_seq_with_nan(SN_word_freq, cf["max_sn_len"], dtype=np.float32)
 
     #assign type
     SN_input_ids = np.asarray(SN_input_ids, dtype=np.int64)
@@ -155,7 +156,7 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
     data = {"SN_input_ids": SN_input_ids, "SN_attention_mask": SN_attention_mask, "SN_WORD_len": SN_WORD_len,
             "SP_input_ids": SP_input_ids, "SP_attention_mask": SP_attention_mask,
             "SP_ordinal_pos": np.array(SP_ordinal_pos), "SP_landing_pos": np.array(SP_landing_pos), "SP_fix_dur": np.array(SP_fix_dur),
-            "sub_id": sub_id_list, "SN_ids": SN_ids}
+            "sub_id": sub_id_list, "SN_ids": SN_ids, "SN_pred": SN_pred, "SN_word_freq": SN_word_freq}
 
     return data
 
@@ -177,6 +178,8 @@ class BSCdataset(Dataset):
         sample["sn_input_ids"] = self.data["SN_input_ids"][idx,:]
         sample["sn_attention_mask"] = self.data["SN_attention_mask"][idx,:]
         sample["sn_word_len"] = self.data['SN_WORD_len'][idx,:]
+        sample["sn_pred"] = self.data['SN_pred'][idx, :]
+        sample["sn_word_freq"] = self.data['SN_word_freq'][idx, :]
 
         sample["sp_input_ids"] = self.data["SP_input_ids"][idx,:]
         sample["sp_attention_mask"] = self.data["SP_attention_mask"][idx,:]
@@ -443,6 +446,7 @@ def compute_word_length_celer(arr):
     arr[arr==0] = 1/(0+0.5)
     arr[arr!=0] = 1/(arr[arr!=0])
     return arr
+
 def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer, cf):
     """
     SN_token_embedding   <CLS>, bla, bla, <SEP>
@@ -450,6 +454,7 @@ def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer
     SP_ordinal_pos 0, bla, bla, max_sp_len
     SP_fix_dur     0, bla, bla, 0
     """
+    SN_ids = []
     SN_input_ids, SN_attention_mask, SN_WORD_len, WORD_ids_sn = [], [], [], []
     SP_input_ids, SP_attention_mask, WORD_ids_sp = [], [], []
     SP_ordinal_pos, SP_landing_pos, SP_fix_dur = [], [], []
@@ -558,6 +563,7 @@ def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer
 
             sp_ordinal_pos = sp_word_pos.astype(int)
             SP_ordinal_pos.append(sp_ordinal_pos)
+            SP_ordinal_pos.append(sp_ordinal_pos)
             SP_fix_dur.append(sp_fix_dur)
             SP_landing_pos.append(sp_fix_loc)
 
@@ -587,6 +593,7 @@ def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer
             SN_WORD_len.append(sn_word_len)
             WORD_ids_sn.append(word_ids_sn)
             sub_id_list.append(int(sub_id))
+            SN_ids.append(sn_id)
 
     #padding for batch computation
     SP_ordinal_pos = pad_seq(SP_ordinal_pos, max_len=(cf["max_sp_len"]), pad_value=cf["max_sn_len"])
@@ -602,11 +609,12 @@ def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer
     sub_id_list = np.asarray(sub_id_list, dtype=np.int64)
     WORD_ids_sn = np.asarray(WORD_ids_sn)
     WORD_ids_sp = np.asarray(WORD_ids_sp)
+    SN_ids = np.asarray(SN_ids)
 
     data = {"SN_input_ids": SN_input_ids, "SN_attention_mask": SN_attention_mask, "SN_WORD_len": SN_WORD_len, "WORD_ids_sn": WORD_ids_sn,
             "SP_input_ids": SP_input_ids, "SP_attention_mask": SP_attention_mask, "WORD_ids_sp": WORD_ids_sp,
             "SP_ordinal_pos": np.array(SP_ordinal_pos), "SP_landing_pos": np.array(SP_landing_pos), "SP_fix_dur": np.array(SP_fix_dur),
-            "sub_id": sub_id_list,
+            "sub_id": sub_id_list, "SN_ids": SN_ids
             }
 
     return data
@@ -627,6 +635,7 @@ class celerdataset(Dataset):
 
     def __getitem__(self,idx):
         sample = {}
+        sample["sn_ids"] = self.data["SN_ids"][idx]
         sample["sn_input_ids"] = self.data["SN_input_ids"][idx,:]
         sample["sn_attention_mask"] = self.data["SN_attention_mask"][idx,:]
         sample["sn_word_len"] = self.data['SN_WORD_len'][idx,:]

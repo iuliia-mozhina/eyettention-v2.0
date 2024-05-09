@@ -61,7 +61,7 @@ class Eyettention(nn.Module):
         self.dropout_dense = nn.Dropout(0.2)
         self.decoder_dense = nn.Sequential(
             self.dropout_dense,
-            nn.Linear(self.hidden_size * 2 + 3, 512), 
+            nn.Linear(self.hidden_size * 2 + 3, 512),  # was only + 1
             nn.ReLU(),
             self.dropout_dense,
             nn.Linear(512, 256),
@@ -77,7 +77,6 @@ class Eyettention(nn.Module):
 
         ################## Duration Decoder Cells #################
         self.decoder_duration_cell1 = nn.LSTMCell(768 + 51, self.hidden_size)
-      #  self.decoder_duration_cell1 = nn.LSTMCell(3, self.hidden_size)
         self.decoder_duration_cell2 = nn.LSTMCell(self.hidden_size, self.hidden_size)
         self.decoder_duration_cell3 = nn.LSTMCell(self.hidden_size, self.hidden_size)
         self.decoder_duration_cell4 = nn.LSTMCell(self.hidden_size, self.hidden_size)
@@ -90,23 +89,27 @@ class Eyettention(nn.Module):
         # Duration prediction head
         self.dropout_duration = nn.Dropout(0.2)
         self.decoder_duration = nn.Sequential(
-            self.dropout_duration,
-            nn.Linear(self.hidden_size * 2 + 3, 512), 
+           self.dropout_duration,
+            nn.Linear(self.hidden_size * 2 + 3, 512),
             nn.ReLU(),
             self.dropout_duration,
-            nn.Linear(512, 256),
+            nn.Linear(512, 128),
             nn.ReLU(),
             self.dropout_duration,
-            nn.Linear(256, 256),
+            nn.Linear(128, 128),
             nn.ReLU(),
             self.dropout_duration,
-            nn.Linear(256, 256),
+            nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(256, 1)  # Output single value for fixation duration
+            nn.Linear(128, 1)  # Output single value for fixation duration
         )
 
         # for scanpath generation
         self.softmax = nn.Softmax(dim=1)
+
+        self.layer_norm_word = nn.LayerNorm(normalized_shape=131)
+
+     #   self.layer_norm_dur = nn.LayerNorm(normalized_shape=819, eps=encoder_config.layer_norm_eps)
 
     def pool_subword_to_word(self, subword_emb, word_ids_sn, target, pool_method='sum'):
         # batching computing
@@ -143,16 +146,20 @@ class Eyettention(nn.Module):
             merged_word_emb, sn_mask_word = hidden_rep_orig, None
 
         hidden_rep = self.embedding_dropout(merged_word_emb)
-        x, (hn, hc) = self.encoder_lstm(hidden_rep, None) 
+        x, (hn, hc) = self.encoder_lstm(hidden_rep, None)  # [256, 27, 128]
 
         # concatenate with the word length feature
-        x = torch.cat((x, sn_word_len[:, :, None]), dim=2) 
+        x = torch.cat((x, sn_word_len[:, :, None]), dim=2)  # [256, 27, 129]
 
         # concatenate with the word frequency feature
-        x = torch.cat((x, sn_word_freq[:, :, None]), dim=2)  
+        x = torch.cat((x, sn_word_freq[:, :, None]), dim=2)  # [256, 27, 130]
 
         # concatenate with the predictability feature
-        x = torch.cat((x, sn_pred[:, :, None]), dim=2) 
+        x = torch.cat((x, sn_pred[:, :, None]), dim=2)  # [256, 27, 131]
+
+        # Apply LayerNorm along the last dimension (131)
+        x = self.layer_norm_word(x)
+
         return x, sn_mask_word
 
     def cross_attention(self, ht, hs, sn_mask, cur_word_index):
@@ -274,7 +281,11 @@ class Eyettention(nn.Module):
         # Prepare input for duration prediction
         location_output = location_output.permute(1, 0, 2)  # [39, 256, 51]
 
-        dur_emb_in = torch.cat([dec_emb_in, location_output], dim=2) 
+        dur_emb_in = torch.cat([dec_emb_in, location_output], dim=2)  # [39, 256, 819]
+
+     #   dur_emb_in = self.layer_norm_dur(dur_emb_in)  # layer normalisation
+
+    #    print("dur_emb_in", dur_emb_in, dur_emb_in.shape)
 
         # Initialize hidden states for duration prediction LSTM cells
         batch_size = dur_emb_in.shape[1]  # 256
@@ -309,8 +320,8 @@ class Eyettention(nn.Module):
 
             context_dur = torch.matmul(att_weight_dur, enc_out_dur)  # [256, 1, 129] [batch, 1, units]
             # Decoder
-            hc_dur = torch.cat([context_dur.squeeze(1), hx_dur], dim=1)  # [256, 257] 
-            duration_result = self.decoder_duration(hc_dur)  
+            hc_dur = torch.cat([context_dur.squeeze(1), hx_dur], dim=1)  # [256, 257] correct
+            duration_result = self.decoder_duration(hc_dur)  # location is [256, 51]
             duration_output.append(duration_result)
 
         duration_output = torch.stack(duration_output, dim=0)
@@ -324,13 +335,13 @@ class Eyettention(nn.Module):
                                                                     word_ids_sp)
 
         # Phase 2: Decode fixation duration using learned representations from location prediction
-        dec_emb_in = self.prepare_input_for_duration_prediction(sp_emd, sp_pos, word_ids_sp, sp_landing_pos, sp_fix_dur)
+        dec_emb_in = self.prepare_input_for_duration_prediction(sp_emd, sp_pos, word_ids_sp)
 
         duration_output = self.decode_duration(dec_emb_in, location_output, enc_out, sn_mask, sp_pos, sp_emd)
 
         return location_output, duration_output, atten_weights_batch
 
-    def prepare_input_for_duration_prediction(self, sp_emd, sp_pos, word_ids_sp, sp_landing_pos, sp_fix_dur):
+    def prepare_input_for_duration_prediction(self, sp_emd, sp_pos, word_ids_sp):
         # dec_emb_in represents word embeddings with positional embeddings
         dec_emb_in = self.encoder.embeddings.word_embeddings(sp_emd[:, :-1])
         if word_ids_sp is not None:
@@ -348,13 +359,6 @@ class Eyettention(nn.Module):
         dec_emb_in = self.LayerNorm(dec_emb_in)
         dec_emb_in = dec_emb_in.permute(1, 0, 2)  # [step, n, emb_dim]
         dec_emb_in = self.embedding_dropout(dec_emb_in)
-
-        # concatenate two additional gaze features
-   #     if sp_landing_pos is not None:
-    #        dec_emb_in = torch.cat((dec_emb_in, sp_landing_pos.permute(1, 0)[:-1, :, None]), dim=2)
-
-     #   if sp_fix_dur is not None:
-      #      dec_emb_in = torch.cat((dec_emb_in, sp_fix_dur.permute(1, 0)[:-1, :, None]), dim=2)
 
         return dec_emb_in
 
@@ -391,13 +395,12 @@ class Eyettention(nn.Module):
                             sn_word_len,
                             le,
                             sn_word_freq,
-                            sp_landing_pos,
-                            sp_fix_dur,
+                            sn_pred,
                             max_pred_len=60
                             ):
         ############# Fixation location generation ##############
         # compute the scan path generated from the model when the first CLS taken is given
-        enc_out, sn_mask_word = self.encode(sn_emd, sn_mask, word_ids_sn, sn_word_len, sn_word_freq)
+        enc_out, sn_mask_word = self.encode(sn_emd, sn_mask, word_ids_sn, sn_word_len, sn_word_freq, sn_pred)
         if sn_mask_word is None:
             sn_mask = torch.Tensor.bool(sn_mask)
         else:
@@ -434,24 +437,16 @@ class Eyettention(nn.Module):
         # concatenate two additional gaze features, which are set to zeros for CLS token
         dec_in = torch.cat((dec_emb_in, torch.zeros(dec_emb_in.shape[0], 2).to(sn_emd.device)), dim=1)
 
-     #   print("sp_landing_pos", sp_landing_pos.shape) # [256, 40]
-      #  print("sp_fix_dur", sp_fix_dur.shape) # [256, 40]
-       # if sp_landing_pos is not None:
-        #    dur_in = torch.cat((dec_emb_in, sp_landing_pos.permute(1, 0)[:-1, :, None]), dim=2)
-
-        #if sp_fix_dur is not None:
-         #   dur_in = torch.cat((dur_in, sp_fix_dur.permute(1, 0)[:-1, :, None]), dim=2)
-
-      #  dur_in = torch.cat((dec_emb_in, sp_landing_pos, sp_fix_dur), dim=1)
-     #   print("dur_in", dur_in, dur_in.shape)
-
         # generate fixation one by one in an autoregressive way
         output = []
         density_prediction = []
+        location_output = []
         duration_output = []
+        dec_emb_in_accumulated = []
         pred_counter = 0
         output.append(start_pos.long())  # append 0 at position 0 (len = 256)
         for p in range(max_pred_len - 1):
+            dec_emb_in_accumulated.append(dec_emb_in)
             hx, cx = self.decoder_cell1(dec_in, (hx, cx))  # [batch, units]
             hx2, cx2 = self.decoder_cell2(self.dropout_LSTM(hx), (hx2, cx2))
             hx3, cx3 = self.decoder_cell3(self.dropout_LSTM(hx2), (hx3, cx3))
@@ -470,35 +465,7 @@ class Eyettention(nn.Module):
             hc = torch.cat([context.squeeze(1), hx8], dim=1)  # [batch, units *2]
 
             result = self.decoder_dense(hc)  # [batch, dec_o_dim] torch.Size([256, 51])
-
-            ####### duration prediction #######
-            # dec_in is [256, 770]
-            # location_output is [256, 51]
-            location_output = result.detach().clone()
-            dur_emb_in = torch.cat([dur_in, location_output], dim=1)
-       #     dur_emb_in = torch.cat([dec_in, location_output], dim=1)  # [256, 821]
-           # print("dur_emb_in", dur_emb_in, dur_emb_in.shape)
-            hx_dur, cx_dur = self.decoder_duration_cell1(dur_emb_in, (hx_dur, cx_dur))
-            hx_dur, cx_dur = self.decoder_duration_cell2(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
-            hx_dur, cx_dur = self.decoder_duration_cell3(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
-            hx_dur, cx_dur = self.decoder_duration_cell4(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
-            hx_dur, cx_dur = self.decoder_duration_cell5(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
-            hx_dur, cx_dur = self.decoder_duration_cell6(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
-            hx_dur, cx_dur = self.decoder_duration_cell7(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
-            hx_dur, cx_dur = self.decoder_duration_cell8(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
-
-            # computes attention weights between the current hidden state of the fixation-sequence encoder (ht)
-            # and the output from the word-sequence encoder (hs).
-            att_weight_dur = self.cross_attention(ht=hx_dur,  # current hidden state of the fixation-sequence encoder
-                                                  hs=enc_out,  # output from the word-sequence encoder
-                                                  sn_mask=sn_mask,
-                                                  cur_word_index=output[-1])
-
-            context_dur = torch.matmul(att_weight_dur, enc_out)  # [256, 1, 129] [batch, 1, units]
-            # Decoder
-            hc_dur = torch.cat([context_dur.squeeze(1), hx_dur], dim=1)  # [256, 257] correct
-            duration_result = self.decoder_duration(hc_dur)  # location is [256, 51]
-            duration_output.append(duration_result)
+            location_output.append(result)
 
             softmax_result = self.softmax(result)  # [batch, dec_o_dim]
             density_prediction.append(softmax_result)
@@ -547,14 +514,42 @@ class Eyettention(nn.Module):
             # concatenate two additional gaze features
             dec_in = torch.cat((dec_emb_in, torch.zeros(dec_emb_in.shape[0], 2).to(sn_emd.device)), dim=1)
 
+        ####### duration prediction #######
+        location_output = torch.stack(location_output, dim=0)  # [59, 256, 51]
+        dec_emb_in_accumulated = torch.stack(dec_emb_in_accumulated, dim=0)  # [59, 256, 768]
+
+        dur_emb_in = torch.cat([dec_emb_in_accumulated, location_output], dim=2)  # [59, 256, 819]
+     #   print("dur_emb_in", dur_emb_in, dur_emb_in.shape)
+
+        for j in range(dur_emb_in.shape[0]):
+            hx_dur, cx_dur = self.decoder_duration_cell1(dur_emb_in[j], (hx_dur, cx_dur))
+            hx_dur, cx_dur = self.decoder_duration_cell2(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
+            hx_dur, cx_dur = self.decoder_duration_cell3(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
+            hx_dur, cx_dur = self.decoder_duration_cell4(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
+            hx_dur, cx_dur = self.decoder_duration_cell5(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
+            hx_dur, cx_dur = self.decoder_duration_cell6(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
+            hx_dur, cx_dur = self.decoder_duration_cell7(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
+            hx_dur, cx_dur = self.decoder_duration_cell8(self.dropout_LSTM_duration(hx_dur), (hx_dur, cx_dur))
+
+            # computes attention weights between the current hidden state of the fixation-sequence encoder (ht)
+            # ad the output from the word-sequence encoder (hs).
+            att_weight_dur = self.cross_attention(ht=hx_dur,  # current hidden state of the fixation-sequence encoder
+                                                hs=enc_out,  # output from the word-sequence encoder
+                                                sn_mask=sn_mask,
+                                                cur_word_index=output[-1])
+
+            context_dur = torch.matmul(att_weight_dur, enc_out)  # [256, 1, 129] [batch, 1, units]
+            # Decoder
+            hc_dur = torch.cat([context_dur.squeeze(1), hx_dur], dim=1)  # [256, 257] correct
+            duration_result = self.decoder_duration(hc_dur)  # location is [256, 51]
+            duration_output.append(duration_result)
+
         output = torch.stack(output, dim=0)  # [step, batch]  # torch.Size([60, 256])
 
         duration_output = torch.stack(duration_output, dim=0)  # torch.Size([256, 59, 1])
         duration_output = duration_output.squeeze(-1)
         print("duration_output", duration_output.permute(1, 0), duration_output.permute(1, 0).shape)
 
-        #	duration_output = torch.stack(duration_output, dim=0)
-        #	duration_output = duration_output.squeeze(-1)
         # Concatenate the zero tensor to duration_output along dimension 0 (rows)
         #	zero_tensor = torch.zeros(1, 256).to(duration_output.device)
         #	duration_output = torch.cat([zero_tensor, duration_output], dim=0)
@@ -815,3 +810,4 @@ class Eyettention_readerID(nn.Module):
                                               word_ids_sp,
                                               sub_id)  # [batch, step, dec_o_dim]
         return pred, atten_weights
+

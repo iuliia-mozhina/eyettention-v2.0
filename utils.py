@@ -75,7 +75,11 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
     for sn_id in sn_list:
         #process sentence sequence
         sn_df = eyemovement_df[eyemovement_df.sn==sn_id]
+     #   if sn_df == 1:
+      #      print("sn_df", sn_df)
         sn = word_info_df[word_info_df.SN == sn_id]
+      #  if sn_df ==1:
+       #     print("sn", sn)
         sn_str = ''.join(sn.WORD.values)
         sn_word_len = compute_BSC_word_length(sn)
         predictability = sn.PRED.values
@@ -94,7 +98,9 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
 
         #process fixation sequence
         for sub_id in reader_list:
-            sub_df = sn_df[sn_df.id==sub_id]
+            sub_df = sn_df[sn_df.id==sub_id]  # [i rows x 43 columns], i depends on the reader
+        #    if sn_id ==1:
+         #       print("sub_df", sub_df)  # sub_df are multiple dfs corresponding to different readers of sentence 1
             if len(sub_df) == 0:
                 #no scanpath data found for the subject
                 continue
@@ -104,13 +110,19 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
                 sub_df = sub_df.iloc[:-1]
 
             sp_word_pos, sp_fix_loc, sp_fix_dur = sub_df.wn.values, sub_df.fl.values, sub_df.dur.values
+         #   if sn_id ==1:
+          #      print(sp_word_pos)
             sp_landing_pos_char = np.modf(sp_fix_loc)[0]
             SP_landing_pos.append(sp_landing_pos_char)
+
+          #  print("before", sp_fix_loc, type(sp_fix_loc))  # here is what we have in scasim
 
             #Convert word-based ordinal positions to token(character)-based ordinal positions
             #When the fixated word index is less than 0, set it to 0
             sp_fix_loc = np.where(sp_fix_loc<0, 0, sp_fix_loc)
             sp_ordinal_pos = [np.sum(sn[sn.NW<value].LEN) + np.ceil(sp_fix_loc[count]+ 1e-10) for count, value in enumerate(sp_word_pos)]
+        #    if sn_id == 1:
+         #       print(sp_ordinal_pos)
             SP_ordinal_pos.append(sp_ordinal_pos)
             SP_fix_dur.append(sp_fix_dur)
 
@@ -144,6 +156,7 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
     SN_WORD_len = pad_seq_with_nan(SN_WORD_len, cf["max_sn_len"], dtype=np.float32)
     SN_pred = pad_seq_with_nan(SN_pred, cf["max_sn_len"], dtype=np.float32)
     SN_word_freq = pad_seq_with_nan(SN_word_freq, cf["max_sn_len"], dtype=np.float32)
+  #  print(SP_ordinal_pos)
 
     #assign type
     SN_input_ids = np.asarray(SN_input_ids, dtype=np.int64)
@@ -266,12 +279,28 @@ def _compute_central_sp(dataset, sn_id):
     _, _, eyemovement_df = load_corpus(dataset)
     # Filter eyemovement data for the given sentence
     eyemovement_df_sn = eyemovement_df[eyemovement_df['sn'] == sn_id]
+    word_info_df, _, _ = load_corpus(dataset)
+    sn = word_info_df[word_info_df.SN == sn_id]
 
     grouped_scanpaths = []
     subject_ids = []
-    for subject_id, subject_data in eyemovement_df_sn.groupby('id'): # Group by subject ID and prepare scanpaths in the correct format (x-coordinate, y-coordinate, duration)
-    # Convert fixation data into (x, y, duration) tuples
-        scanpath = [(row['fl'], 0, row['dur']) for _, row in subject_data.iterrows()]
+    for subject_id, subject_data in eyemovement_df_sn.groupby(
+            'id'):  # Group by subject ID and prepare scanpaths in the correct format (x-coordinate, y-coordinate, duration)
+        # Convert fixation data into (x, y, dur) tuples
+        sp_fix_loc = [row['fl'] for _, row in subject_data.iterrows()]
+        # Convert word-based ordinal positions to token(character)-based ordinal positions
+        sp_fix_loc = np.where(np.array(sp_fix_loc) < 0, 0, np.array(sp_fix_loc))
+        sp_word_pos = [row['wn'] for _, row in subject_data.iterrows()]
+
+        sp_fix_loc = [np.sum(sn[sn.NW < value].LEN) + np.ceil(sp_fix_loc[count] + 1e-10) for count, value in
+                          enumerate(sp_word_pos)]
+        subject_data['sp_fix_loc'] = sp_fix_loc
+
+        # Create scanpath
+        scanpath = [(0, 0, -0.0)]  # Add initial tuple
+        scanpath += [(row['sp_fix_loc'], 0, row['dur']) for _, row in subject_data.iterrows()]
+        scanpath.append((26, 0, -0.0))  # Add final tuple
+
         grouped_scanpaths.append(scanpath)
         subject_ids.append(subject_id)
 
@@ -305,12 +334,38 @@ def _compute_central_sp(dataset, sn_id):
     return central_scanpath, central_subject_id, min_scasim_score
 
 
-def compute_scasim(dataset, location_preds, duration_preds, sn_id):
-    most_central_scanpath, _, _ = _compute_central_sp(dataset, sn_id)
-    # scasim()
-    print("location_preds", location_preds)
-    print("duration_preds", duration_preds)
-    print("sn_id", sn_id)
+def compute_scasim(dataset, scanpath, sn_ids_test):
+    # calculate most central sp for each sentence from the test set
+    central_scanpaths = {}
+    if dataset == "BSC":
+        for sn_id in sn_ids_test:
+            most_central_scanpath, _, _ = _compute_central_sp(dataset, sn_id)
+            if sn_id not in central_scanpaths:
+                central_scanpaths[sn_id] = most_central_scanpath
+
+    sent_to_indx_dict = {}
+    for index, sent_id in enumerate(scanpath['sent_id']):
+        if sent_id not in sent_to_indx_dict:
+            sent_to_indx_dict[sent_id] = []
+        sent_to_indx_dict[sent_id].append(index)
+
+    similarity_scores = []
+    formatted_sp = []  # list of lists of tuples
+    for sent_id in set(scanpath['sent_id']):  # iterate through sentences in the scanpath dict
+        if sent_id in central_scanpaths:
+            # Retrieve the corresponding most central scanpath for the current sent_id
+            central_scanpath = central_scanpaths[sent_id]
+            # Get the locations and durations for the current sentence
+            idx = sent_to_indx_dict[sent_id]
+            for id in idx:
+                location = scanpath['locations'][id]
+                duration = scanpath['durations'][id]
+                current_sp = [(location[i], 0, duration[i]) for i in range(len(location))]
+                formatted_sp.append(current_sp)
+                # Compute similarity between the current sp and the most central sp
+                score = scasim(current_sp, central_scanpath)
+                similarity_scores.append(int(score))
+    return similarity_scores  # and then we call the mean in the notebook during eval
 
 
 def scasim(s, t, modulator=0.83):
@@ -320,8 +375,7 @@ def scasim(s, t, modulator=0.83):
     # #' set to 1, the scanpaths are compared only with respect to their
     # #' temporal patterns.  The default value approximates the sensitivity
     # #' to spatial distance found in the human visual system.
-    # TODO: need to write a separate function that can take dfs as a parameter in order to compute the pair-wise dissimilarities in the dataset
-
+    
     # Prepare matrix:
     m, n = len(s), len(t)
     d = [list(map(lambda i: 0, range(n + 1))) for _ in range(m + 1)]

@@ -76,7 +76,7 @@ class Eyettention(nn.Module):
         )
 
         ################## Duration Decoder Cells #################
-        self.decoder_duration_cell1 = nn.LSTMCell(768 + 51 + 1, self.hidden_size)  # input: word embedding size +  location output + fixation duration
+        self.decoder_duration_cell1 = nn.LSTMCell(768 + (self.cf["max_sn_len"] * 2 - 3) + 1, self.hidden_size)  # input: word embedding size +  location output + fixation duration
         self.decoder_duration_cell2 = nn.LSTMCell(self.hidden_size, self.hidden_size)
         self.decoder_duration_cell3 = nn.LSTMCell(self.hidden_size, self.hidden_size)
         self.decoder_duration_cell4 = nn.LSTMCell(self.hidden_size, self.hidden_size)

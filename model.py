@@ -49,7 +49,7 @@ class Eyettention(nn.Module):
         self.decoder_cell6 = nn.LSTMCell(self.hidden_size, self.hidden_size)
         self.decoder_cell7 = nn.LSTMCell(self.hidden_size, self.hidden_size)
         self.decoder_cell8 = nn.LSTMCell(self.hidden_size, self.hidden_size)
-        self.dropout_LSTM = nn.Dropout(0.2)
+        self.dropout_LSTM = nn.Dropout(0.5)
 
         # Cross-Attention
         # computes attention weights between the current hidden state of the fixation-sequence encoder (ht)
@@ -58,7 +58,7 @@ class Eyettention(nn.Module):
 
         # Decoder
         # Location prediction head
-        self.dropout_dense = nn.Dropout(0.2)
+        self.dropout_dense = nn.Dropout(0.5)
         self.decoder_dense = nn.Sequential(
             self.dropout_dense,
             nn.Linear(self.hidden_size * 2 + 1, 512),

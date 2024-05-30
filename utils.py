@@ -7,6 +7,7 @@ from torch.utils.data import Dataset
 import torch
 from tqdm import tqdm
 from math import acos, cos, sin, pi
+import ast
 
 def load_bsc() -> Tuple[pd.DataFrame, ...]:
     """
@@ -271,73 +272,164 @@ def which_min(*l):
     return mi
 
 
-def _compute_central_sp(dataset, sn_id):
+def _compute_central_sp(dataset, sn_id, eyemovement_df, word_info_df, sent_dict):
     """
     Calculates the most central scanpath for a given sentence in the dataset.
     The most central scanpath is the sp with the smallest average dissimilarity from every other sp for a given sentence.
     """
-    _, _, eyemovement_df = load_corpus(dataset)
-    # Filter eyemovement data for the given sentence
-    eyemovement_df_sn = eyemovement_df[eyemovement_df['sn'] == sn_id]
-    word_info_df, _, _ = load_corpus(dataset)
-    sn = word_info_df[word_info_df.SN == sn_id]
-
     grouped_scanpaths = []
     subject_ids = []
-    for subject_id, subject_data in eyemovement_df_sn.groupby(
-            'id'):  # Group by subject ID and prepare scanpaths in the correct format (x-coordinate, y-coordinate, duration)
-        # Convert fixation data into (x, y, dur) tuples
-        sp_fix_loc = [row['fl'] for _, row in subject_data.iterrows()]
-        # Convert word-based ordinal positions to token(character)-based ordinal positions
-        sp_fix_loc = np.where(np.array(sp_fix_loc) < 0, 0, np.array(sp_fix_loc))
-        sp_word_pos = [row['wn'] for _, row in subject_data.iterrows()]
 
-        sp_fix_loc = [np.sum(sn[sn.NW < value].LEN) + np.ceil(sp_fix_loc[count] + 1e-10) for count, value in
+    if dataset == 'BSC':
+        # Filter eyemovement data for the given sentence
+        eyemovement_df_sn = eyemovement_df[eyemovement_df['sn'] == sn_id]
+        sn = word_info_df[word_info_df.SN == sn_id]
+
+        for subject_id, subject_data in eyemovement_df_sn.groupby(
+                'id'):  # Group by subject ID and prepare scanpaths in the correct format (x-coordinate, y-coordinate, duration)
+            # Convert fixation data into (x, y, dur) tuples
+            sp_fix_loc = [row['fl'] for _, row in subject_data.iterrows()]
+            # Convert word-based ordinal positions to token(character)-based ordinal positions
+            sp_fix_loc = np.where(np.array(sp_fix_loc) < 0, 0, np.array(sp_fix_loc))
+            sp_word_pos = [row['wn'] for _, row in subject_data.iterrows()]
+
+            sp_fix_loc = [np.sum(sn[sn.NW < value].LEN) + np.ceil(sp_fix_loc[count] + 1e-10) for count, value in
                           enumerate(sp_word_pos)]
-        subject_data['sp_fix_loc'] = sp_fix_loc
+            subject_data['sp_fix_loc'] = sp_fix_loc
 
-        # Create scanpath
-        scanpath = [(0, 0, -0.0)]  # Add initial tuple
-        scanpath += [(row['sp_fix_loc'], 0, row['dur']) for _, row in subject_data.iterrows()]
-        scanpath.append((26, 0, -0.0))  # Add final tuple
+            # Create scanpath
+            scanpath = [(0, 0, -0.0)]  # Add initial tuple
+            scanpath += [(row['sp_fix_loc'], 0, row['dur']) for _, row in subject_data.iterrows()]
+            scanpath.append((26, 0, -0.0))  # Add final tuple
 
-        grouped_scanpaths.append(scanpath)
-        subject_ids.append(subject_id)
+            grouped_scanpaths.append(scanpath)
+            subject_ids.append(subject_id)
+
+    elif dataset == "CELER":
+        for key, value in sent_dict.items():
+            if value == sn_id:
+                sn_id = key
+                break
+
+        eyemovement_df_sn = eyemovement_df[eyemovement_df['sentenceid'] == sn_id]
+        # remove fixations on non-words
+        eyemovement_df_sn = eyemovement_df_sn.loc[eyemovement_df_sn.CURRENT_FIX_INTEREST_AREA_LABEL != '.']
+
+        for subject_id, subject_data in eyemovement_df_sn.groupby(
+                'list'):
+            # Preprocess data
+            sub_df = subject_data.copy()
+
+            sp_word_pos, sp_fix_loc, sp_fix_dur = sub_df.CURRENT_FIX_INTEREST_AREA_ID.values, sub_df.CURRENT_FIX_NEAREST_INTEREST_AREA_DISTANCE.values, sub_df.CURRENT_FIX_DURATION.values
+
+            # 1) Fixation duration outlier handling
+            outlier_indx = np.where(sp_fix_dur < 50)[0]
+            if outlier_indx.size > 0:
+                for out_idx in range(len(outlier_indx)):
+                    outlier_i = outlier_indx[out_idx]
+                    merge_flag = False
+
+                    # Handle edge cases (first/last fixations)
+                    if outlier_i == len(sp_fix_dur) - 1 or outlier_i == 0:
+                        merge_flag = True
+
+                    else:
+                        # Attempt to merge with neighboring fixations
+                        if outlier_i - 1 >= 0 and merge_flag == False:
+                            if sub_df.iloc[outlier_i].CURRENT_FIX_INTEREST_AREA_LABEL == sub_df.iloc[
+                                outlier_i - 1].CURRENT_FIX_INTEREST_AREA_LABEL:
+                                sp_fix_dur[outlier_i - 1] = sp_fix_dur[outlier_i - 1] + sp_fix_dur[outlier_i]
+                                merge_flag = True
+
+                        if outlier_i + 1 < len(sp_fix_dur) and merge_flag == False:
+                            if sub_df.iloc[outlier_i].CURRENT_FIX_INTEREST_AREA_LABEL == sub_df.iloc[
+                                outlier_i + 1].CURRENT_FIX_INTEREST_AREA_LABEL:
+                                sp_fix_dur[outlier_i + 1] = sp_fix_dur[outlier_i + 1] + sp_fix_dur[outlier_i]
+                                merge_flag = True
+
+                    # Remove outliers from all arrays and DataFrame
+                    sp_word_pos = np.delete(sub_df['CURRENT_FIX_INTEREST_AREA_ID'].values, outlier_i)
+                    sp_fix_loc = np.delete(sub_df['CURRENT_FIX_NEAREST_INTEREST_AREA_DISTANCE'].values, outlier_i)
+                    sp_fix_dur = np.delete(sp_fix_dur, outlier_i)
+                    sub_df.drop(sub_df.index[outlier_i], axis=0, inplace=True)
+                    outlier_indx = outlier_indx - 1  # Adjust remaining indices
+
+            sp_word_pos = sp_word_pos.astype(int)
+
+            # Create scanpath
+            scanpath = [(0, 0, -0.0)]  # Add initial tuple
+            scanpath += list(zip(sp_word_pos, [0] * len(sp_word_pos), sp_fix_dur))
+            #  scanpath.append((26, 0, -0.0))  # Add final tuple
+            grouped_scanpaths.append(scanpath)
+            subject_ids.append(subject_id)
 
     # Compute dissimilarity matrix
-    dissimilarity_matrix = []
-    for i, sp1 in enumerate(grouped_scanpaths):
-        total_dissimilarity = 0
-        count = 0
-        for j, sp2 in enumerate(grouped_scanpaths):
-            if i != j:  # Exclude self-comparison
-                try:
-                    dissimilarity = scasim(sp1, sp2)  # Calculate dissimilarity
-                    total_dissimilarity += dissimilarity
-                    count += 1
-                except IndexError:
-                    print(f"Issue with scanpath {i} or {j}. Skipping comparison.")
+    if len(grouped_scanpaths) > 1:
+        dissimilarity_matrix = []
+        for i, sp1 in enumerate(grouped_scanpaths):
+            total_dissimilarity = 0
+            count = 0
+            # Limit comparisons to a maximum of 10 other scanpaths
+            for j in range(i + 1, min(i + 11, len(grouped_scanpaths))):
+                if i != j:  # Exclude self-comparison
+                    try:
+                        dissimilarity = scasim(sp1, grouped_scanpaths[j])  # Calculate dissimilarity
+                        total_dissimilarity += dissimilarity
+                        count += 1
+                    except IndexError:
+                        print(f"Issue with scanpath {i} or {j}. Skipping comparison.")
 
-        if count > 0:
-            average_dissimilarity = total_dissimilarity / count
-            dissimilarity_matrix.append((i, average_dissimilarity))
+            if count > 0:
+                average_dissimilarity = total_dissimilarity / count
+                dissimilarity_matrix.append((i, average_dissimilarity))
 
-    # Find the scanpath with the smallest average dissimilarity
-    central_sp_index = min(dissimilarity_matrix, key=lambda x: x[1])[0]
-    central_scanpath = grouped_scanpaths[central_sp_index]
-    central_subject_id = subject_ids[central_sp_index]
-    min_scasim_score = min(dissimilarity_matrix, key=lambda x: x[1])[1]
+    if len(grouped_scanpaths) > 1:
+        # Find the scanpath with the smallest average dissimilarity
+        central_sp_index = min(dissimilarity_matrix, key=lambda x: x[1])[0]
+        central_scanpath = grouped_scanpaths[central_sp_index]
+        central_subject_id = subject_ids[central_sp_index]
+        min_scasim_score = min(dissimilarity_matrix, key=lambda x: x[1])[1]
+
+    # case when there is only 1 sp for a given sentence
+    else:
+        # take this sp as the most central one by default (no alternatives)
+        central_scanpath = grouped_scanpaths[0]
+        central_subject_id = subject_ids[0]
+        min_scasim_score = None
 
     return central_scanpath, central_subject_id, min_scasim_score
 
 
-def compute_scasim(dataset, scanpath, sn_ids_test):
+def compute_scasim(dataset, dataset_path, scanpath, sn_ids_test):
     # calculate most central sp for each sentence from the test set
     central_scanpaths = {}
-    if dataset == "BSC":
-        for sn_id in sn_ids_test.tolist():
+    print("Computing the most central scanpaths...")
+
+    if dataset == "CELER":
+        eye_df_path = os.path.join(dataset_path, 'data_v2.0/sent_fix.tsv')
+        eyemovement_df = pd.read_csv(eye_df_path, delimiter='\t')
+        eyemovement_df['CURRENT_FIX_INTEREST_AREA_LABEL'] = eyemovement_df.CURRENT_FIX_INTEREST_AREA_LABEL.replace(
+            '\t(.*)', '', regex=True)
+        word_info_path = os.path.join(dataset_path, 'data_v2.0/sent_ia.tsv')
+        word_info_df = pd.read_csv(word_info_path, delimiter='\t')
+        word_info_df['IA_LABEL'] = word_info_df.IA_LABEL.replace('\t(.*)', '', regex=True)
+
+        # read the sentence mapping dict
+        with open('../../data_splits/CELER_sent_dict.txt', "r") as f:
+            data_str = f.read()
+            sent_dict = ast.literal_eval(data_str)
+
+    elif dataset == "BSC":
+        bsc_emd_path = os.path.join(dataset_path, 'BSC.EMD/BSC.EMD.txt')
+        eyemovement_df = pd.read_csv(bsc_emd_path, delimiter='\t')
+        info_path = os.path.join(dataset_path, 'BSC.Word.Info.v2.xlsx')
+        word_info_df = pd.read_excel(info_path, 'word')
+
+    for sn_id in sn_ids_test.tolist():
+        if sn_id in scanpath['sent_id']:
             if sn_id not in central_scanpaths:
-                most_central_scanpath, _, _ = _compute_central_sp(dataset, sn_id)
+                # compute the most central scanpaths for a given sn_id
+                most_central_scanpath, _, min_scasim_score = _compute_central_sp(dataset, sn_id, eyemovement_df.copy(), word_info_df.copy(), sent_dict)
                 central_scanpaths[sn_id] = most_central_scanpath
                 print(sn_id, most_central_scanpath)
 
@@ -362,8 +454,9 @@ def compute_scasim(dataset, scanpath, sn_ids_test):
                 formatted_sp.append(current_sp)
                 # Compute similarity between the current sp and the most central sp
                 score = scasim(current_sp, central_scanpath)
+                print("Current scasim score", score)
                 similarity_scores.append(int(score))
-    return similarity_scores  # and then we call the mean in the notebook during eval
+    return similarity_scores
 
 
 def scasim(s, t, modulator=0.83):
@@ -481,7 +574,6 @@ def prepare_scanpath(sp_dnn, dur_dnn, sn_len, sp_human, sp_fix_dur_test, cf, sn_
     return sp_dnn_dict, sp_human_dict
 
 
-
 def celer_load_native_speaker():
     sub_metadata_path = './Data/celer/metadata.tsv'
     sub_infor = pd.read_csv(sub_metadata_path, delimiter='\t')
@@ -496,7 +588,7 @@ def compute_word_length_celer(arr):
     return arr
 
 
-def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer, cf):
+def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer, cf, sent_dict):
     """
     SN_token_embedding   <CLS>, bla, bla, <SEP>
     SP_token_embedding       <CLS>, bla, bla, <SEP>
@@ -646,6 +738,9 @@ def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer
             sub_id_list.append(int(sub_id))
             SN_ids.append(sn_id)
 
+    # Convert filenames to their corresponding indices
+    SN_ids = [sent_dict[filename] for filename in SN_ids]
+
     #padding for batch computation
     SP_ordinal_pos = pad_seq(SP_ordinal_pos, max_len=(cf["max_sp_len"]), pad_value=cf["max_sn_len"])
     SP_fix_dur = pad_seq(SP_fix_dur, max_len=(cf["max_sp_len"]), pad_value=0)
@@ -660,12 +755,12 @@ def _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer
     sub_id_list = np.asarray(sub_id_list, dtype=np.int64)
     WORD_ids_sn = np.asarray(WORD_ids_sn)
     WORD_ids_sp = np.asarray(WORD_ids_sp)
-    SN_ids = np.asarray(SN_ids)
+    SN_ids = np.asarray(SN_ids, dtype=np.int64)
 
     data = {"SN_input_ids": SN_input_ids, "SN_attention_mask": SN_attention_mask, "SN_WORD_len": SN_WORD_len, "WORD_ids_sn": WORD_ids_sn,
             "SP_input_ids": SP_input_ids, "SP_attention_mask": SP_attention_mask, "WORD_ids_sp": WORD_ids_sp,
             "SP_ordinal_pos": np.array(SP_ordinal_pos), "SP_landing_pos": np.array(SP_landing_pos), "SP_fix_dur": np.array(SP_fix_dur),
-            "sub_id": sub_id_list, "SN_ids": SN_ids
+            "sub_id": sub_id_list, "SN_ids": np.array(SN_ids)
             }
 
     return data
@@ -675,10 +770,10 @@ class celerdataset(Dataset):
 
     def __init__(
         self,
-        word_info_df, eyemovement_df, cf, reader_list, sn_list, tokenizer
+        word_info_df, eyemovement_df, cf, reader_list, sn_list, tokenizer, sent_dict
     ):
 
-        self.data = _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer, cf)
+        self.data = _process_celer(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer, cf, sent_dict)
 
     def __len__(self):
         return len(self.data["SN_input_ids"])
@@ -703,6 +798,22 @@ class celerdataset(Dataset):
         sample["sub_id"] = self.data["sub_id"][idx]
 
         return sample
+
+
+def convert_sent_id(sent_list):
+    filename_to_idx = {}
+    idx = 0
+    # Iterate through filenames and create the mapping
+    for filename in sent_list:
+        if filename not in filename_to_idx:
+            filename_to_idx[filename] = idx
+            idx += 1
+    return filename_to_idx
+
+
+def get_relevant_sent_dict(sent_dict, sn_ids):
+  """Filters sent_dict to include only filenames present in sn_ids"""
+  return {filename: sent_dict[filename] for filename in sn_ids if filename in sent_dict}
 
 def _process_zuco(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer, cf):
     SN_ids = []

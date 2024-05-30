@@ -1,1 +1,1 @@
-# eyettention-v2.0
+# Enhancing Human Scanpath Prediction using an Attention-based Dual-Sequence Model

@@ -56,25 +56,9 @@ def calculate_bert_cloze_prob(word, sentence, tokenizer, model):
         print(f"Error processing row: {word} - {sentence} ({e})")
         return None
 
-def count_present_missing(unique_values, other_list):
-  """
-  This function counts the number of values present in unique_values that are also present in other_list.
-
-  Args:
-      unique_values: A list of unique values.
-      other_list: Another list to compare with.
-
-  Returns:
-      A tuple containing two counts: (present, missing).
-  """
-
-  present = sum(value in other_list for value in unique_values)
-  missing = len(unique_values) - present
-  return present, missing
 
 def modify_celer_input():
     df = pd.read_csv("CELER.txt", delimiter='\t')
-    print(df)  # 574722
 
     # read the sentence mapping dict
     with open('../../data_splits/CELER_sent_dict.txt', "r") as f:
@@ -88,11 +72,6 @@ def modify_celer_input():
     sent_list = list(sent_dict.values())
     df = df[df['SENT'].isin(sent_list)].reset_index(drop=True)
     df['SENT'] = df['SENT'].astype(int)
-    print(df)  # 343315
-
-    unique_values = df['SENT'].unique()
-    print("unique_values", len(list(unique_values)))  # 4951
-    print("sent_list", len(set(sent_list)))  # 5456
 
     # BERT failed to estimate the cloze prob for some words (e.g., NUM%) --> set them to a value close to 0
     epsilon = 1e-10
@@ -122,7 +101,7 @@ def modify_celer_input():
     # remove ' signs from words (e.g., don't --> dont)
     df['WORD'] = df['WORD'].str.replace("'", '')
 
- #   df.to_csv('CELER_input.txt', sep='\t', index=False)
+    df.to_csv('CELER_input.txt', sep='\t', index=False)
 
 
 def main():
@@ -157,6 +136,6 @@ def main():
 
 
 if __name__ == "__main__":
-  #  main()
+    main()
     modify_celer_input()
 

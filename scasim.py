@@ -1,7 +1,8 @@
 # Adapted implementation of Malsburg
 # for details see R implementation: https://github.com/tmalsburg/scanpath/blob/master/scanpath/R/scanpath.R
+from math import acos, sin, cos, pi
 from utils import *
-
+import ast
 
 def which_min(*l):
     mi = 0
@@ -248,28 +249,31 @@ def compute_central_sp(dataset, dataset_path):
     return central_sp_per_sent
 
 
-def compute_scasim(central_sp_path, scanpath):
+def compute_scasim(central_sp_path, scanpath, sent_dict_path=None):
+    # For CELER map the sentence names to their corresponding sent ids
+    if "CELER" in central_sp_path:
+        with open(sent_dict_path, "r") as f:  # '././data_splits/CELER_sent_dict.txt'
+            data_str = f.read()
+            sent_dict = ast.literal_eval(data_str)
+
     with open(central_sp_path, "r") as f:
         data_str = f.read()
         central_scanpaths = ast.literal_eval(data_str)
 
+        if "CELER" in central_sp_path:
+            new_central_sp = {}
+            for key, value in central_scanpaths.items():
+                # Check if the key exists in the mapping dictionary
+                if key in sent_dict:
+                    # Get the corresponding ID from the mapping
+                    new_key = sent_dict[key]
+                    new_central_sp[new_key] = value
+            central_scanpaths = new_central_sp
+
+        central_scanpaths = {int(key): value for key, value in central_scanpaths.items()}
+
     for key, value in central_scanpaths.items():
         central_scanpaths[key] = [(int(x[0]), x[1], int(x[-1])) for x in value]
-
-    # For CELER map the sentence names to their corresponding sent ids
-    if "CELER" in central_sp_path:
-        with open('././data_splits/CELER_sent_dict.txt', "r") as f:
-            data_str = f.read()
-            sent_dict = ast.literal_eval(data_str)
-
-        new_central_sp = {}
-        for key, value in central_scanpaths.items():
-            # Check if the key exists in the mapping dictionary
-            if key in sent_dict:
-                # Get the corresponding ID from the mapping
-                new_key = sent_dict[key]
-                new_central_sp[new_key] = value
-        central_scanpaths = new_central_sp
 
     sent_to_indx_dict = {}
     for index, sent_id in enumerate(scanpath['sent_id']):

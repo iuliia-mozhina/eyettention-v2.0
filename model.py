@@ -139,11 +139,11 @@ class Eyettention(nn.Module):
 
         # concatenate with the word length feature
         x = torch.cat((x, sn_word_len[:, :, None]), dim=2)  # [256, 27, 129]
-        
+
         if sn_word_freq:
             # concatenate with the word frequency feature
             x = torch.cat((x, sn_word_freq[:, :, None]), dim=2)  # [256, 27, 130]
-        
+
         if sn_pred:
             # concatenate with the predictability feature
             x = torch.cat((x, sn_pred[:, :, None]), dim=2)  # [256, 27, 131]
@@ -429,12 +429,13 @@ class Eyettention(nn.Module):
             dec_emb_in = dec_emb_in + position_embeddings
             dec_emb_in = self.LayerNorm(dec_emb_in)
             # concatenate two additional gaze features
-            dec_in = torch.cat((dec_emb_in, torch.zeros(dec_emb_in.shape[0], 2).to(sn_emd.device)), dim=1)
+            duration_output_tensor = torch.stack(duration_output, dim=0)
+            prev_duration = duration_output_tensor[-1]
+            prev_duration = prev_duration.unsqueeze(-1)
+            dec_in = torch.cat((dec_emb_in, torch.zeros(dec_emb_in.shape[0], 1).to(sn_emd.device), prev_duration),
+                               dim=1)
 
         output = torch.stack(output, dim=0)  # [step, batch]  # torch.Size([60, 256])
-
-        print("location output", output.permute(1, 0), output.permute(1, 0).shape)  # [256, 60]
         duration_output = torch.stack(duration_output, dim=0)  # [60, 256]
-        print("duration output", duration_output.permute(1, 0), duration_output.permute(1, 0).shape)  # [256, 60]
 
         return output.permute(1, 0), density_prediction, duration_output.permute(1, 0)

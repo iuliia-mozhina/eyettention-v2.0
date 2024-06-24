@@ -6,8 +6,6 @@ from typing import Tuple
 from torch.utils.data import Dataset
 import torch
 from tqdm import tqdm
-from math import acos, cos, sin, pi
-import ast
 
 
 def load_bsc() -> Tuple[pd.DataFrame, ...]:
@@ -275,7 +273,29 @@ def eval_log_llh(dnn_out, label, pad_mask):
     return res
 
 
-def revert_z_score_normalization(data_list, mean, std):
+def eval_mse(dnn_out, label, pad_mask):
+    """
+  Calculates the Mean Squared Error for each scanpath and returns a list.
+
+  Args:
+      dnn_out: A PyTorch tensor of model outputs.
+      label: A PyTorch tensor of labels.
+
+  Returns:
+      A list of MSE values for each scanpath.
+  """
+    res = []
+    # Create MSELoss criterion
+    criterion = torch.nn.MSELoss(reduction='mean')
+    # For each scanpath calculate the MSE and append to results
+    for sp_indx in range(dnn_out.shape[0]):
+        out = criterion(dnn_out[sp_indx, :] * pad_mask[sp_indx, :],
+                        label[sp_indx, :] * pad_mask[sp_indx, :])
+        res.append(out.item())
+    return res
+
+
+def revert_z_score_normalization(feature, data_list, mean, std):
     reverted_data = []
     for item in data_list:
         # Convert item to a PyTorch tensor
@@ -285,8 +305,9 @@ def revert_z_score_normalization(data_list, mean, std):
 
         # Revert z-score normalization
         reverted_values = (values_to_revert * std) + mean
-        reverted_values *= 1000
-        reverted_values = torch.round(reverted_values).to(torch.int32)
+        if feature == "dur":
+            reverted_values *= 1000  # convert durations to milliseconds
+            reverted_values = torch.round(reverted_values).to(torch.int32)
 
         # Concatenate back with first and last values
         reverted_list = torch.cat([item[:1], reverted_values, item[-1:]], dim=0)
@@ -297,7 +318,8 @@ def revert_z_score_normalization(data_list, mean, std):
     return reverted_data
 
 
-def prepare_scanpath(sp_dnn, dur_dnn, sn_len, sp_human, sp_fix_dur_test, cf, sn_ids_test, fix_dur_mean, fix_dur_std):
+def prepare_scanpath(sp_dnn, dur_dnn, land_pos_dnn, sn_len, sp_human, sp_fix_dur_test, sp_landing_pos_test, cf,
+                     sn_ids_test, fix_dur_mean, fix_dur_std, landing_pos_mean, landing_pos_std):
     max_sp_len = sp_dnn.shape[1]
     sp_human = sp_human.detach().to('cpu').numpy()
     # Find the number "sn_len+1" -> the end point
@@ -314,24 +336,32 @@ def prepare_scanpath(sp_dnn, dur_dnn, sn_len, sp_human, sp_fix_dur_test, cf, sn_
     # replace the last terminal number to cf["max_sn_len"]-1, keep the same as the human scanpath label
     for i in range(len(sp_dnn_cut)):
         sp_dnn_cut[i][-1] = cf["max_sn_len"] - 1
-    # Truncate DNN duration data after the end point
+    # Truncate DNN duration & landing position data after the end point
     dur_dnn_cut = [dur_dnn[i][:stop_indx[i] + 1] for i in range(dur_dnn.shape[0])]
+    land_pos_dnn_cut = [land_pos_dnn[i][:stop_indx[i] + 1] for i in range(land_pos_dnn.shape[0])]
 
     # process the human scanpath data, truncating data after the end point
     stop_indx = [np.where(sp_human[i, :] == cf["max_sn_len"] - 1)[0][0] for i in range(sp_human.shape[0])]
     sp_human_cut = [sp_human[i][:stop_indx[i] + 1] for i in range(sp_human.shape[0])]
-    # Truncate human duration data after the end point
+    # Truncate human duration & landing position data after the end point
     sp_fix_dur_test_cut = [sp_fix_dur_test[i][:stop_indx[i] + 1] for i in range(sp_fix_dur_test.shape[0])]
+    land_pos_test_cut = [sp_landing_pos_test[i][:stop_indx[i] + 1] for i in range(sp_landing_pos_test.shape[0])]
 
-    # Revert the z-score normalisation for durations
+    # Revert the z-score normalisation for durations and landing positions
     # human durations
-    sp_fix_dur_test_cut = revert_z_score_normalization(sp_fix_dur_test_cut, fix_dur_mean, fix_dur_std)
+    sp_fix_dur_test_cut = revert_z_score_normalization("dur", sp_fix_dur_test_cut, fix_dur_mean, fix_dur_std)
     # generated durations
-    dur_dnn_cut = revert_z_score_normalization(dur_dnn_cut, fix_dur_mean, fix_dur_std)
+    dur_dnn_cut = revert_z_score_normalization("dur", dur_dnn_cut, fix_dur_mean, fix_dur_std)
+    # human landing pos
+    land_pos_test_cut = revert_z_score_normalization("land_pos", land_pos_test_cut, landing_pos_mean, landing_pos_std)
+    # generated landing pos
+    land_pos_dnn_cut = revert_z_score_normalization("land_pos", land_pos_dnn_cut, landing_pos_mean, landing_pos_std)
 
     # Create dictionaries to store the scanpath data
-    sp_dnn_dict = {'locations': sp_dnn_cut, 'durations': dur_dnn_cut, 'sent_id': sn_ids_test.tolist()}
-    sp_human_dict = {'locations': sp_human_cut, 'durations': sp_fix_dur_test_cut, 'sent_id': sn_ids_test.tolist()}
+    sp_dnn_dict = {'locations': sp_dnn_cut, 'durations': dur_dnn_cut, 'landing_pos': land_pos_dnn_cut,
+                   'sent_id': sn_ids_test.tolist()}
+    sp_human_dict = {'locations': sp_human_cut, 'durations': sp_fix_dur_test_cut, 'landing_pos': land_pos_test_cut,
+                     'sent_id': sn_ids_test.tolist()}
 
     return sp_dnn_dict, sp_human_dict
 

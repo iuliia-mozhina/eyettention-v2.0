@@ -1,6 +1,7 @@
 # Adapted implementation of Malsburg
 # for details see R implementation: https://github.com/tmalsburg/scanpath/blob/master/scanpath/R/scanpath.R
 from math import acos, sin, cos, pi
+from collections import Counter
 from utils import *
 import ast
 import json
@@ -210,6 +211,28 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
 
     return random_sp
 
+
+def filter_sp(sp):
+    # evaluate only on sentences that were read by multiple users
+    sentence_counts = Counter(sp["sent_id"])
+    filtered_sent_ids = []
+    filtered_durations = []
+    filtered_locations = []
+    filtered_landing_pos = []
+    for sent_id, location, duration, land_pos in zip(sp["sent_id"], sp["locations"], sp["durations"],
+                                                     sp["landing_pos"]):
+        if sentence_counts.get(sent_id, 0) > 1:
+            filtered_sent_ids.append(sent_id)
+            filtered_locations.append(location)
+            filtered_durations.append(duration)
+            filtered_landing_pos.append(land_pos)
+
+    sp["sent_id"] = filtered_sent_ids
+    sp["durations"] = filtered_durations
+    sp["locations"] = filtered_locations
+    sp["landing_pos"] = filtered_landing_pos
+    return sp
+    
 
 def which_min(*l):
     mi = 0

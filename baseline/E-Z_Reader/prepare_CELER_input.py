@@ -1,8 +1,7 @@
 from transformers import BertTokenizer, BertForMaskedLM
-import pandas as pd
-import torch
-import numpy as np
 import ast
+from utils import *
+
 
 def calculate_bert_cloze_prob(word, sentence, tokenizer, model):
     """
@@ -17,9 +16,6 @@ def calculate_bert_cloze_prob(word, sentence, tokenizer, model):
   Returns:
       A float representing the cloze probability (higher probability indicates the model is more likely to predict the original word).
   """
-    if type(sentence) != str and type(word) != str:
-        return None  # Return None for NaN sentences
-
     try:
         # convert the first word of a sentence to lowercase
         if sentence[0].isupper():
@@ -35,7 +31,8 @@ def calculate_bert_cloze_prob(word, sentence, tokenizer, model):
                 return None
             masked_sentence = f"{parts[0]} [MASK] {parts[1]}"
 
-        encoding = tokenizer.encode_plus(masked_sentence, return_tensors='pt', add_special_tokens=True, return_attention_mask=True)
+        encoding = tokenizer.encode_plus(masked_sentence, return_tensors='pt', add_special_tokens=True,
+                                         return_attention_mask=True)
 
         input_ids = encoding['input_ids'].to(model.device)
         attention_mask = encoding['attention_mask'].to(model.device)
@@ -43,7 +40,7 @@ def calculate_bert_cloze_prob(word, sentence, tokenizer, model):
         # Get predictions from BERT model
         with torch.no_grad():
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)  # [1, 29, 30522]
+            predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)
 
         # Get probability of the original word being predicted
         masked_index = torch.where(encoding['input_ids'] == 103)
@@ -56,46 +53,12 @@ def calculate_bert_cloze_prob(word, sentence, tokenizer, model):
         print(f"Error processing row: {word} - {sentence} ({e})")
         return None
 
-def count_present_missing(unique_values, other_list):
-  """
-  This function counts the number of values present in unique_values that are also present in other_list.
-
-  Args:
-      unique_values: A list of unique values.
-      other_list: Another list to compare with.
-
-  Returns:
-      A tuple containing two counts: (present, missing).
-  """
-
-  present = sum(value in other_list for value in unique_values)
-  missing = len(unique_values) - present
-  return present, missing
 
 def modify_celer_input():
     df = pd.read_csv("CELER.txt", delimiter='\t')
-    print(df)  # 574722
-
-    # read the sentence mapping dict
-    with open('../../data_splits/CELER_sent_dict.txt', "r") as f:
-        data_str = f.read()
-        sent_dict = ast.literal_eval(data_str)
-
-    # encode sent ids numerically based on the provided dict from the CELER main training
-    df['SENT'] = df['SENT'].map(sent_dict)
-
-    # filter native speakers only (sentences that are used during the training, val and eval of Eyettention model)
-    sent_list = list(sent_dict.values())
-    df = df[df['SENT'].isin(sent_list)].reset_index(drop=True)
-    df['SENT'] = df['SENT'].astype(int)
-    print(df)  # 343315
-
-    unique_values = df['SENT'].unique()
-    print("unique_values", len(list(unique_values)))  # 4951
-    print("sent_list", len(set(sent_list)))  # 5456
 
     # BERT failed to estimate the cloze prob for some words (e.g., NUM%) --> set them to a value close to 0
-    epsilon = 1e-10
+    epsilon = 1e-5
     df['PRED'] = df['PRED'].fillna(epsilon)
 
     # mark the end of the sentence with special symbol @ for the E-Z Reader processing
@@ -115,31 +78,21 @@ def modify_celer_input():
 
     # revert the negative log transformation with base 2 for word frequency
     df['FREQ'] = np.power(2, -df['FREQ'])
-
     # convert word length to int
     df['LEN'] = df['LEN'].astype(int)
-
     # remove ' signs from words (e.g., don't --> dont)
     df['WORD'] = df['WORD'].str.replace("'", '')
 
- #   df.to_csv('CELER_input.txt', sep='\t', index=False)
+    df.to_csv('CELER_input.txt', sep='\t', index=False)
 
 
-def main():
-    df = pd.read_csv('../../Data/celer/data_v2.0/sent_ia.tsv', delimiter='\t')
-    df['IA_LABEL'] = df.IA_LABEL.replace('\t(.*)', '', regex=True)
+def calculate_cloze_prob():
+    df = pd.read_csv("CELER_BERT_input.txt", delimiter='\t')
 
-    # Clean up the corpus from None values
-    new_df = df[['FREQ_BLLIP', 'WORD_LEN', 'WORD_NORM', 'sentenceid', 'sentence']]
-    new_df['word_type'] = new_df['WORD_NORM'].apply(lambda x: type(x).__name__)
-    float_rows = new_df[new_df['word_type'] == 'float']
-    sentence_ids_to_remove = float_rows['sentenceid'].tolist()
-    new_df = new_df.drop(new_df[new_df['sentenceid'].isin(sentence_ids_to_remove)].index)
-
-    word_freq_column = new_df['FREQ_BLLIP']
-    len_column = new_df['WORD_LEN']
-    word_column = new_df['WORD_NORM']
-    sentence_number_column = new_df['sentenceid']
+    word_freq_column = df['FREQ_BLLIP']
+    len_column = df['WORD_LEN']
+    word_column = df['WORD_NORM']
+    sentence_number_column = df['SENT']
 
     # Estimate cloze probability using BERT
     model_name = "bert-base-uncased"
@@ -147,16 +100,44 @@ def main():
     model = BertForMaskedLM.from_pretrained(model_name)
 
     # Store cloze probability estimated by BERT
-    new_df['PRED'] = new_df.apply(
+    df['PRED'] = df.apply(
         lambda row: calculate_bert_cloze_prob(row['WORD_NORM'], row['sentence'], tokenizer, model), axis=1)
 
-    result_df = pd.DataFrame({'FREQ': word_freq_column, 'LEN': len_column, "PRED": new_df['PRED'], "WORD": word_column,
-                          "SENT": sentence_number_column})
-
+    result_df = pd.DataFrame({'FREQ': word_freq_column, 'LEN': len_column, "PRED": df['PRED'], "WORD": word_column,
+                              "SENT": sentence_number_column})
     result_df.to_csv('CELER.txt', sep='\t', index=False)
 
 
-if __name__ == "__main__":
-  #  main()
-    modify_celer_input()
+def preprocess_celer_input():
+    word_info_df = pd.read_csv('../../Data/celer/data_v2.0/sent_ia.tsv', delimiter='\t')
+    word_info_df['IA_LABEL'] = word_info_df.IA_LABEL.replace('\t(.*)', '', regex=True)
 
+    # filter sentences that were read only by native speakers
+    sub_metadata_path = '../../Data/celer/metadata.tsv'
+    sub_infor = pd.read_csv(sub_metadata_path, delimiter='\t')
+    reader_list = sub_infor[sub_infor.L1 == 'English'].List.values
+    sn_list = np.unique(word_info_df[word_info_df['list'].isin(reader_list)].sentenceid.values).tolist()
+
+    all_sent = pd.DataFrame(columns=list(word_info_df.columns))
+    for sn_id in tqdm(sn_list):
+        # notice: Each sentence is recorded multiple times in file |word_info_df|.
+        sn = word_info_df[word_info_df.sentenceid == sn_id]
+        sn = sn[sn['list'] == sn.list.values.tolist()[0]]
+        all_sent = all_sent.append(sn, ignore_index=True)
+
+    # read the sentence mapping dict
+    with open('../../data_splits/CELER_sent_dict.txt', "r") as f:
+        data_str = f.read()
+        sent_dict = ast.literal_eval(data_str)
+    # encode sent ids numerically based on the provided dict from the CELER main training
+    all_sent['SENT'] = all_sent['sentenceid'].map(sent_dict)
+
+    df = all_sent[['FREQ_BLLIP', 'WORD_LEN', 'WORD_NORM', 'SENT', 'sentence']]
+    df = df.dropna(subset=['WORD_NORM'])
+    df.to_csv('CELER_BERT_input.txt', sep='\t', index=False)
+
+
+if __name__ == "__main__":
+    preprocess_celer_input()
+    calculate_cloze_prob()
+    modify_celer_input()

@@ -55,7 +55,7 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
     random_sp["sent_id"] = []
 
     if dataset == 'BSC':
-        dataset_path = '././Data/beijing-sentence-corpus/' 
+        dataset_path = '././Data/beijing-sentence-corpus/'
         bsc_emd_path = os.path.join(dataset_path, 'BSC.EMD/BSC.EMD.txt')
         eyemovement_df = pd.read_csv(bsc_emd_path, delimiter='\t')
         info_path = os.path.join(dataset_path, 'BSC.Word.Info.v2.xlsx')
@@ -98,10 +98,10 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
                 random_sp["sent_id"].append(sn_id)
 
     elif dataset == "CELER":
-        eyemovement_df = pd.read_csv('././Data/celer/sent_fix.tsv', delimiter='\t')  
+        eyemovement_df = pd.read_csv('././Data/celer/data_v2.0/sent_fix.tsv', delimiter='\t') 
         eyemovement_df['CURRENT_FIX_INTEREST_AREA_LABEL'] = eyemovement_df.CURRENT_FIX_INTEREST_AREA_LABEL.replace(
             '\t(.*)', '', regex=True)
-        word_info_df = pd.read_csv('drive/MyDrive/celer/sent_ia.tsv', delimiter='\t')
+        word_info_df = pd.read_csv('././Data/celer/data_v2.0/sent_ia.tsv', delimiter='\t')
         word_info_df['IA_LABEL'] = word_info_df.IA_LABEL.replace('\t(.*)', '', regex=True)
 
         with open(sent_dict_path, "r") as f:  # '././data_splits/CELER_sent_dict.txt'
@@ -109,12 +109,10 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
             sent_dict = ast.literal_eval(data_str)
 
         for sn_id in sp_human["sent_id"]:
-            print(sn_id)
             for key, value in sent_dict.items():
                 if value == sn_id:
                     sentence_name = key
                     break
-            print(sentence_name)
             eyemovement_df_sn = eyemovement_df[eyemovement_df['sentenceid'] == sentence_name]
             sn = word_info_df[word_info_df.sentenceid == sentence_name]
             sn = sn[sn['list'] == sn.list.values.tolist()[0]]
@@ -128,8 +126,10 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
                 sn_str = sn_str[:43] + sn_str[44:]
             sn_len = len(sn_str.split())
 
-            # sample a random subject
-            random_subj_id = eyemovement_df_sn['list'].sample(1).iloc[0]
+            # sample a random subject from the L1 subjects
+            reader_list = celer_load_native_speaker()
+            eyemovement_df_sn = eyemovement_df_sn[eyemovement_df_sn['list'].isin(reader_list)]
+            random_subj_id = eyemovement_df_sn['list'].sample(n=1, random_state=1).iloc[0]
             eyemovement_df_sn = eyemovement_df_sn[eyemovement_df_sn['list'] == random_subj_id]
 
             for subject_id, subject_data in eyemovement_df_sn.groupby(
@@ -174,13 +174,6 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
                         sp_fix_dur = np.delete(sp_fix_dur, outlier_i)
                         sub_df.drop(sub_df.index[outlier_i], axis=0, inplace=True)
                         outlier_indx = outlier_indx - 1
-
-                # 2) scanpath too long, remove outliers, speed up the inference
-                if len(sp_word_pos) > 50:  # 72/10684
-                    continue
-                # 3)scanpath too short for a normal length sentence
-                if len(sp_word_pos) <= 1 and sn_len > 10:
-                    continue
 
                 # 4) check landing position feature
                 # assign missing value to 'nan'

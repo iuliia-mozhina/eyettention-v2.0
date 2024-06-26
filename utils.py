@@ -6,6 +6,7 @@ from typing import Tuple
 from torch.utils.data import Dataset
 import torch
 from tqdm import tqdm
+import random
 
 
 def load_bsc() -> Tuple[pd.DataFrame, ...]:
@@ -801,3 +802,101 @@ def one_hot_encode(arr, dim):
 
 def gradient_clipping(dnn_model, clip=10):
     torch.nn.utils.clip_grad_norm_(dnn_model.parameters(), clip)
+
+
+def sample_scanpaths(df, sent, count):
+    """
+  Samples scanpaths for a given sentence with a specified count.
+
+  Args:
+      df (pd.DataFrame): Dataframe containing scanpath data ('dur', 'word', 'loc', 'sent', 'subj').
+      sent (int): The sentence ID for which to sample scanpaths.
+      count (int): The number of scanpaths to sample.
+
+  Returns:
+      pd.dataframe: A DataFrame containing the sampled (or all) scanpaths
+                   for the specified sentence.
+  """
+    # Filter scanpaths for the current sentence
+    sentence_df = df[df['SN'] == sent]
+
+    # Get the number of available scanpaths for this sentence
+    available_count = len(sentence_df)
+
+    # Determine the actual number of scanpaths to return
+    if count > available_count:
+        print(
+            f"Requested count ({count}) exceeds available scanpaths ({available_count}) for sentence {sent}. Using all available scanpaths.")
+        actual_count = available_count
+    else:
+        actual_count = count
+
+    # Randomly sample n scanpaths from the available ones (if applicable)
+    if actual_count < available_count:
+        random_sp = random.sample(sentence_df['subj_id'].tolist(), actual_count)
+        result_df = sentence_df[sentence_df['subj_id'].isin(random_sp)]
+    else:
+        # Use all available scanpaths
+        result_df = sentence_df.copy()
+
+    return result_df
+
+
+def create_sp(dataset, df):
+    """
+        Creates a scanpath dictionary from the provided DataFrame with the following structure:
+
+        scanpath = {
+            'locations': [locations_list1, locations_list2, ...],  # List of location arrays for each sentence
+            'durations': [durations_list1, durations_list2, ...],  # List of duration lists for each sentence
+            'sent_id': [sent_id1, sent_id2, ...]                    # List of sentence IDs
+        }
+
+        Args:
+            df (pd.DataFrame): DataFrame containing scanpath data ('dur', 'word', 'loc', 'sent', 'subj').
+
+        Returns:
+            dict: The scanpath dictionary with locations, durations, and sentence IDs.
+        """
+    grouped_data = df.groupby(['subj_id', 'SN'])  # maybe group by subj and sn
+
+    locations = []
+    durations = []
+    landing_pos = []
+    sent_id = []
+
+    for _, subj_data in grouped_data:
+        locations.append(subj_data['loc'].to_numpy().astype(float))  
+        durations.append(subj_data['dur'].to_numpy().astype(int))  
+        landing_pos.append(subj_data['land_pos'].to_numpy().astype(float))
+        sent_id.append(subj_data['SN'].iloc[0])  
+
+    scanpath = {
+        'locations': locations,
+        'durations': durations,
+        'landing_pos': landing_pos,
+        'sent_id': sent_id
+    }
+
+    for i, loc_array in enumerate(scanpath["locations"]):
+        loc_list = loc_array.tolist()
+        loc_list.insert(0, 0)
+        if dataset == "BSC":
+            loc_list.append(26)
+        else:  # CELER
+            loc_list.append(23)
+        scanpath["locations"][i] = np.array(loc_list)
+
+    for i, dur_array in enumerate(scanpath["durations"]):
+        dur_list = dur_array.tolist()
+        dur_list.insert(0, -0.0)
+        dur_list.append(-0.0)
+        scanpath["durations"][i] = dur_list
+
+    for i, land_pos_array in enumerate(scanpath["landing_pos"]):
+        land_pos_list = land_pos_array.tolist()
+        land_pos_list.insert(0, -0.0)
+        land_pos_list.append(-0.0)
+        scanpath["landing_pos"][i] = land_pos_list
+    return scanpath
+    

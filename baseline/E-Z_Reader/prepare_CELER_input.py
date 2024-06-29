@@ -122,11 +122,11 @@ def modify_celer_input():
     # remove ' signs from words (e.g., don't --> dont)
     df['WORD'] = df['WORD'].str.replace("'", '')
 
- #   df.to_csv('CELER_input.txt', sep='\t', index=False)
+    df.to_csv('CELER_input.txt', sep='\t', index=False)
 
 
 def main():
-    df = pd.read_csv('../../Data/celer/data_v2.0/sent_ia.tsv', delimiter='\t')
+    df = pd.read_csv('/mnt/projekte/pmlcluster/aeye/celer/data_v2.0/data_v2.0/sent_ia.tsv', delimiter='\t')
     df['IA_LABEL'] = df.IA_LABEL.replace('\t(.*)', '', regex=True)
 
     # Clean up the corpus from None values
@@ -154,9 +154,13 @@ def main():
                           "SENT": sentence_number_column})
 
     result_df.to_csv('CELER.txt', sep='\t', index=False)
+    breakpoint()
 
 
 if __name__ == "__main__":
-  #  main()
-    modify_celer_input()
+   print('going for main')
+   main()
+   print('main done')
+   modify_celer_input()
+   print('modify done')
 

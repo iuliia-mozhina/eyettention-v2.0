@@ -1,0 +1,709 @@
+--- BEGIN GENERATE PARAMETER FILE ---
+--- END GENERATE PARAMETER FILE ---
+--- BEGIN BUILD PARALLEL CLI VERSION ---
+In file included from C-CODE/swiftstat7_cli.c:28:
+C-CODE/swiftstat7_api.c:65:2: warning: #warning You have not specified a random number generator. Using RANGEN_MT by default. [-Wcpp]
+   65 | #warning You have not specified a random number generator. Using RANGEN_MT by default.
+      |  ^~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_cli.c:28:
+C-CODE/gaengine9a.c:47:2: warning: #warning You have not specified a lexrate module. Using LEXRATE_INVPARAB by default. [-Wcpp]
+   47 | #warning You have not specified a lexrate module. Using LEXRATE_INVPARAB by default.
+      |  ^~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_cli.c:28:
+C-CODE/gaengine9a.c:60:2: warning: #warning You have not specified a saccade execution module. Using EXECSACC_INVGAMMA by default. [-Wcpp]
+   60 | #warning You have not specified a saccade execution module. Using EXECSACC_INVGAMMA by default.
+      |  ^~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_cli.c:28:
+C-CODE/execsacc_gamma.c: In function 'execsacc':
+C-CODE/execsacc_gamma.c:194: warning: "SWIFT_VARIANT_EXECSACC" redefined
+  194 |             #define SWIFT_VARIANT_EXECSACC "rtgamma-exact"
+      | 
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_cli.c:28:
+C-CODE/execsacc_gamma.c:19: note: this is the location of the previous definition
+   19 | #define SWIFT_VARIANT_EXECSACC "rtgamma2"
+      | 
+ld: warning: dylib (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/libgomp.dylib) was built for newer macOS version (11.4) than being linked (11.3)
+--- END BUILD PARALLEL CLI VERSION ---
+--- BEGIN BUILD SERIAL (NON-PARALLEL) CLI VERSION ---
+In file included from C-CODE/swiftstat7_cli.c:28:
+C-CODE/swiftstat7_api.c:65:2: warning: #warning You have not specified a random number generator. Using RANGEN_MT by default. [-Wcpp]
+   65 | #warning You have not specified a random number generator. Using RANGEN_MT by default.
+      |  ^~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_cli.c:28:
+C-CODE/gaengine9a.c:47:2: warning: #warning You have not specified a lexrate module. Using LEXRATE_INVPARAB by default. [-Wcpp]
+   47 | #warning You have not specified a lexrate module. Using LEXRATE_INVPARAB by default.
+      |  ^~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_cli.c:28:
+C-CODE/gaengine9a.c:60:2: warning: #warning You have not specified a saccade execution module. Using EXECSACC_INVGAMMA by default. [-Wcpp]
+   60 | #warning You have not specified a saccade execution module. Using EXECSACC_INVGAMMA by default.
+      |  ^~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_cli.c:28:
+C-CODE/execsacc_gamma.c: In function 'execsacc':
+C-CODE/execsacc_gamma.c:194: warning: "SWIFT_VARIANT_EXECSACC" redefined
+  194 |             #define SWIFT_VARIANT_EXECSACC "rtgamma-exact"
+      | 
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_cli.c:28:
+C-CODE/execsacc_gamma.c:19: note: this is the location of the previous definition
+   19 | #define SWIFT_VARIANT_EXECSACC "rtgamma2"
+      | 
+--- END BUILD SERIAL (NON-PARALLEL) CLI VERSION ---
+--- BEGIN BUILD PYTHON MODULE ---
+running build
+running config_cc
+unifing config_cc, config, build_clib, build_ext, build commands --compiler options
+running config_fc
+unifing config_fc, config, build_clib, build_ext, build commands --fcompiler options
+running build_src
+build_src
+building extension "swiftstat7" sources
+build_src: building npy-pkg config files
+running build_ext
+customize UnixCCompiler
+customize UnixCCompiler using build_ext
+building 'swiftstat7' extension
+compiling C sources
+C compiler: gcc-9 -fno-strict-aliasing -I/Users/iuliiamozhina/opt/miniconda3/envs/SWIFT/include -arch x86_64 -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes
+
+compile options: '-I./SIM/tmp -I/Users/iuliiamozhina/opt/miniconda3/envs/SWIFT/lib/python2.7/site-packages/numpy/core/include -I/Users/iuliiamozhina/opt/miniconda3/envs/SWIFT/include/python2.7 -c'
+extra options: '-fopenmp'
+gcc-9: C-CODE/swiftstat7_py.c
+In file included from /Users/iuliiamozhina/opt/miniconda3/envs/SWIFT/lib/python2.7/site-packages/numpy/core/include/numpy/ndarraytypes.h:1824,
+                 from /Users/iuliiamozhina/opt/miniconda3/envs/SWIFT/lib/python2.7/site-packages/numpy/core/include/numpy/ndarrayobject.h:12,
+                 from /Users/iuliiamozhina/opt/miniconda3/envs/SWIFT/lib/python2.7/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from C-CODE/swiftstat7_py.c:4:
+/Users/iuliiamozhina/opt/miniconda3/envs/SWIFT/lib/python2.7/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:17:2: warning: #warning "Using deprecated NumPy API, disable it with " "#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+   17 | #warning "Using deprecated NumPy API, disable it with " \
+      |  ^~~~~~~
+In file included from C-CODE/swiftstat7_api.c:59,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/array.c: In function 'ar_sw_array_copy':
+C-CODE/array.c:142:10: warning: unused variable 'k' [-Wunused-variable]
+  142 |  int i,j,k;
+      |          ^
+C-CODE/array.c:142:8: warning: unused variable 'j' [-Wunused-variable]
+  142 |  int i,j,k;
+      |        ^
+In file included from C-CODE/swiftstat7_py.c:6:
+C-CODE/swiftstat7_api.c: At top level:
+C-CODE/swiftstat7_api.c:65:2: warning: #warning You have not specified a random number generator. Using RANGEN_MT by default. [-Wcpp]
+   65 | #warning You have not specified a random number generator. Using RANGEN_MT by default.
+      |  ^~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gaengine9a.c:47:2: warning: #warning You have not specified a lexrate module. Using LEXRATE_INVPARAB by default. [-Wcpp]
+   47 | #warning You have not specified a lexrate module. Using LEXRATE_INVPARAB by default.
+      |  ^~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gaengine9a.c:60:2: warning: #warning You have not specified a saccade execution module. Using EXECSACC_INVGAMMA by default. [-Wcpp]
+   60 | #warning You have not specified a saccade execution module. Using EXECSACC_INVGAMMA by default.
+      |  ^~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c: In function 'execsacc':
+C-CODE/execsacc_gamma.c:194: warning: "SWIFT_VARIANT_EXECSACC" redefined
+  194 |             #define SWIFT_VARIANT_EXECSACC "rtgamma-exact"
+      | 
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:19: note: this is the location of the previous definition
+   19 | #define SWIFT_VARIANT_EXECSACC "rtgamma2"
+      | 
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:31:17: warning: unused variable 'w' [-Wunused-variable]
+   31 |     int      l, w, type;
+      |                 ^
+In file included from C-CODE/gaengine9a.c:68,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/logliktimer4.c: In function 'logliktimer':
+C-CODE/logliktimer4.c:24:21: warning: variable 'ix_curfixstart' set but not used [-Wunused-but-set-variable]
+   24 |     int         ix, ix_curfixstart;
+      |                     ^~~~~~~~~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gaengine9a.c: In function 'gaengine':
+C-CODE/gaengine9a.c:389:38: warning: variable 't_i' set but not used [-Wunused-but-set-variable]
+  389 |         double    t = 0.0, t_l, t_n, t_i, t_fix;
+      |                                      ^~~
+C-CODE/gaengine9a.c:389:33: warning: variable 't_n' set but not used [-Wunused-but-set-variable]
+  389 |         double    t = 0.0, t_l, t_n, t_i, t_fix;
+      |                                 ^~~
+C-CODE/gaengine9a.c:389:28: warning: variable 't_l' set but not used [-Wunused-but-set-variable]
+  389 |         double    t = 0.0, t_l, t_n, t_i, t_fix;
+      |                            ^~~
+C-CODE/gaengine9a.c:386:43: warning: unused variable 's0' [-Wunused-variable]
+  386 |         int       i, j, k, l, last, r, s, s0, w, n_hist, trans_point;
+      |                                           ^~
+C-CODE/gaengine9a.c:382:49: warning: unused variable 'mis' [-Wunused-variable]
+  382 |         int       lab, nlab, sacc, num, misloc, mis, Nrefix = 0;
+      |                                                 ^~~
+C-CODE/gaengine9a.c:372:46: warning: variable 'lastprob' set but not used [-Wunused-but-set-variable]
+  372 |         double    ifovea, iparafovea, ptheo, lastprob;
+      |                                              ^~~~~~~~
+C-CODE/gaengine9a.c:368:32: warning: variable 'saccerr' set but not used [-Wunused-but-set-variable]
+  368 |         double    inhib, kpos, saccerr, disptime, labrate;
+      |                                ^~~~~~~
+C-CODE/gaengine9a.c:367:19: warning: unused variable 'dynfac' [-Wunused-variable]
+  367 |         double    dynfac, inhibrate;
+      |                   ^~~~~~
+In file included from C-CODE/swiftstat7_py.c:6:
+C-CODE/swiftstat7_api.c: In function 'load_sentence':
+C-CODE/swiftstat7_api.c:567:15: warning: unused variable 'k' [-Wunused-variable]
+  567 |     int n, j, k;
+      |               ^
+C-CODE/swiftstat7_api.c: In function 'swift_generate':
+C-CODE/swiftstat7_api.c:1087:74: warning: unused variable 'file_proc2' [-Wunused-variable]
+ 1087 |     char file_fsim[PATH_MAX], file_fseq[PATH_MAX], file_proc1[PATH_MAX], file_proc2[PATH_MAX];
+      |                                                                          ^~~~~~~~~~
+C-CODE/swiftstat7_api.c:1087:52: warning: unused variable 'file_proc1' [-Wunused-variable]
+ 1087 |     char file_fsim[PATH_MAX], file_fseq[PATH_MAX], file_proc1[PATH_MAX], file_proc2[PATH_MAX];
+      |                                                    ^~~~~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gaengine9a.c: In function 'gaengine._omp_fn.0':
+C-CODE/gaengine9a.c:1142:24: warning: 'dispfix' may be used uninitialized in this function [-Wmaybe-uninitialized]
+ 1142 |                     if ( i==dispfix )  {
+      |                        ^
+C-CODE/gaengine9a.c:385:47: note: 'dispfix' was declared here
+  385 |         int       presac, testreg, firstpass, dispfix;
+      |                                               ^~~~~~~
+C-CODE/gaengine9a.c:1143:25: warning: 'prevact' may be used uninitialized in this function [-Wmaybe-uninitialized]
+ 1143 |                         fprintf(files->fsim,"%d\t%d\t%d\t%.2f\t%d\t%d\t%.2f\t%d\t%.2f\t%.2f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%.2f\t%.2f\n",
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1144 |                                 r,s,k,kv[i],mat[i][2],presac,presaclen,
+      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1145 |                                 len[k],freq[k],pred[k],w,n1[k],nf1[k],n2[k],nf2[k],testreg,mat[i][3],0,prevact,disptime,tvec[i]);
+      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C-CODE/gaengine9a.c:369:37: note: 'prevact' was declared here
+  369 |         double    presaclen, Pcomb, prevact;
+      |                                     ^~~~~~~
+C-CODE/gaengine9a.c:1143:25: warning: 'disptime' may be used uninitialized in this function [-Wmaybe-uninitialized]
+ 1143 |                         fprintf(files->fsim,"%d\t%d\t%d\t%.2f\t%d\t%d\t%.2f\t%d\t%.2f\t%.2f\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%f\t%.2f\t%.2f\n",
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1144 |                                 r,s,k,kv[i],mat[i][2],presac,presaclen,
+      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1145 |                                 len[k],freq[k],pred[k],w,n1[k],nf1[k],n2[k],nf2[k],testreg,mat[i][3],0,prevact,disptime,tvec[i]);
+      |                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C-CODE/gaengine9a.c:368:41: note: 'disptime' was declared here
+  368 |         double    inhib, kpos, saccerr, disptime, labrate;
+      |                                         ^~~~~~~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'b_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:63: note: 'b_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                                               ^~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'a_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:58: note: 'a_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                                          ^~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'ux_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:40: note: 'ux_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                        ^~~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'a_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:30: note: 'a_r' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                              ^~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:22:18: warning: 'b_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+   22 |  else return a * log(b) - lgamma(a) + (a - 1.0) * log(x) - b * x;
+      |                  ^~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:35: note: 'b_r' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                   ^~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'ux_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:12: note: 'ux_r' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |            ^~~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'b_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:63: note: 'b_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                                               ^~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'a_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:58: note: 'a_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                                          ^~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'ux_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:40: note: 'ux_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                        ^~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:141:25: warning: 'a_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  141 |             knew = x0 + rtruncrgamma(a_r, b_r, ux_r, seed);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:30: note: 'a_r' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                              ^~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:141:25: warning: 'b_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  141 |             knew = x0 + rtruncrgamma(a_r, b_r, ux_r, seed);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:35: note: 'b_r' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                   ^~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:141:25: warning: 'ux_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  141 |             knew = x0 + rtruncrgamma(a_r, b_r, ux_r, seed);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:12: note: 'ux_r' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |            ^~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gaengine9a.c:779:32: warning: 'n_trans' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  779 |                         n_trans++;
+      |                         ~~~~~~~^~
+C-CODE/gaengine9a.c:388:19: note: 'n_trans' was declared here
+  388 |         int       n_trans;
+      |                   ^~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:138:22: warning: 'kpos' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  138 |                 knew = x0 + rtruncrgamma(a_r, b_r, ux_r, seed);
+      |                 ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gaengine9a.c:368:26: note: 'kpos' was declared here
+  368 |         double    inhib, kpos, saccerr, disptime, labrate;
+      |                          ^~~~
+C-CODE/gaengine9a.c:638:38: warning: 'labrate' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  638 |                 W[2] = r_count[2]*lab*labrate;                          /* rate of random walk for labile sacprog stage */
+      |                        ~~~~~~~~~~~~~~^~~~~~~~
+C-CODE/gaengine9a.c:368:51: note: 'labrate' was declared here
+  368 |         double    inhib, kpos, saccerr, disptime, labrate;
+      |                                                   ^~~~~~~
+C-CODE/gaengine9a.c:614:19: warning: 'Nfix' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  614 |             while ( endsw_trial == 0 ) {
+      |                   ^
+C-CODE/gaengine9a.c:402:22: note: 'Nfix' was declared here
+  402 |         unsigned int Nfix;
+      |                      ^~~~
+C-CODE/gaengine9a.c:374:48: warning: 'loglik_comb' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  374 |         double    *loglik_temp, *loglik_spat, *loglik_comb;
+      |                                                ^~~~~~~~~~~
+C-CODE/gaengine9a.c:763:44: warning: 'loglik_temp' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  763 |                             loglik_temp[r] += ptheo;
+      |                                            ^~
+C-CODE/gaengine9a.c:374:20: note: 'loglik_temp' was declared here
+  374 |         double    *loglik_temp, *loglik_spat, *loglik_comb;
+      |                    ^~~~~~~~~~~
+C-CODE/gaengine9a.c:714:44: warning: 'loglik_spat' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  714 |                             loglik_spat[r] += Pcomb;
+      |                                            ^~
+C-CODE/gaengine9a.c:374:34: note: 'loglik_spat' was declared here
+  374 |         double    *loglik_temp, *loglik_spat, *loglik_comb;
+      |                                  ^~~~~~~~~~~
+C-CODE/gaengine9a.c:657:64: warning: 'tfix' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  657 |                 if ( fitting==1 && (t+dt-t_fix)>= (double) tfix[cur_fix] ) {
+      |                                                                ^
+C-CODE/gaengine9a.c:404:21: note: 'tfix' was declared here
+  404 |         int *fwrd, *tfix, *tsac; // Max, 20.11.18: Previously, these used to be combined in the "fixseq" imatrix, now single ivectors of same length (hence more meaningful variable names and more straightforward use of different data types, such as flet)
+      |                     ^~~~
+C-CODE/gaengine9a.c:721:67: warning: 'fwrd' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  721 |                         if ( ( cur_fix>1 ) && (fwrd[cur_fix]==fwrd[cur_fix-1] ) ) refix_sw_cur = 1;
+      |                                                                   ^
+C-CODE/gaengine9a.c:404:14: note: 'fwrd' was declared here
+  404 |         int *fwrd, *tfix, *tsac; // Max, 20.11.18: Previously, these used to be combined in the "fixseq" imatrix, now single ivectors of same length (hence more meaningful variable names and more straightforward use of different data types, such as flet)
+      |              ^~~~
+C-CODE/gaengine9a.c:403:17: warning: 'flet' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  403 |         double *flet;
+      |                 ^~~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c: In function 'execsacc':
+C-CODE/gammalike.c:179:14: warning: 'b_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:63: note: 'b_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                                               ^~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'a_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:58: note: 'a_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                                          ^~~
+In file included from C-CODE/execsacc_gamma.c:21,
+                 from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/gammalike.c:179:14: warning: 'ux_l' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  179 |  else return lower_inc_log_gamma_reg(a, x * b);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:56:40: note: 'ux_l' was declared here
+   56 |     double ux_r, Var_r, E_r, a_r, b_r, ux_l, Var_l, E_l, a_l, b_l, x0;
+      |                                        ^~~~
+In file included from C-CODE/gaengine9a.c:61,
+                 from C-CODE/swiftstat7_api.c:454,
+                 from C-CODE/swiftstat7_py.c:6:
+C-CODE/execsacc_gamma.c:141:25: warning: 'b_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+  141 |             knew = x0 + rtruncrgamma(a_r, b_r, ux_r, seed);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C-CODE/execsacc_gamma.c:141:25: warning: 'a_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+C-CODE/execsacc_gamma.c:141:25: warning: 'ux_r' may be used uninitialized in this function [-Wmaybe-uninitialized]
+creating SIM/py/lib.macosx-10.7-x86_64-2.7
+gcc-9 -shared -arch x86_64 ./SIM/tmp/C-CODE/swiftstat7_py.o -L/Users/iuliiamozhina/opt/miniconda3/envs/SWIFT/lib -o ./SIM/py/lib.macosx-10.7-x86_64-2.7/swiftstat7.so -fopenmp -lpython2.7 -static
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(alloc.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(atomic.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(barrier.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(critical.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(env.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(error.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(icv.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(icv-device.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(iter.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(iter_ull.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(loop.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(loop_ull.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(ordered.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(parallel.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(sections.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(single.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(task.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(team.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(work.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(lock.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(mutex.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(proc.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(sem.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(bar.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(ptrlock.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(time.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(fortran.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(affinity.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(target.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(splay-tree.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(libgomp-plugin.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(oacc-parallel.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(oacc-host.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(oacc-init.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(oacc-mem.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(oacc-async.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(oacc-plugin.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(oacc-cuda.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(priority_queue.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(affinity-fmt.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(teams.o)) was built for newer macOS version (11.4) than being linked (11.3)
+ld: warning: object file (/usr/local/Cellar/gcc@9/9.5.0/lib/gcc/9/gcc/x86_64-apple-darwin21/9.5.0/../../../libgomp.a(openacc.o)) was built for newer macOS version (11.4) than being linked (11.3)
+--- END BUILD PYTHON MODULE ---
+--- BEGIN BUILD R MODULE ---
+Beim Start - Warnmeldung:
+Setting LC_CTYPE failed, using "C" 
+using C compiler: 'Apple clang version 14.0.3 (clang-1403.0.22.14.1)'
+using SDK: 'MacOSX13.3.sdk'
+clang -arch x86_64 -I"/Library/Frameworks/R.framework/Resources/include" -DNDEBUG   -I/opt/R/x86_64/include   -I ./SIM/tmp  -fPIC  -falign-functions=64 -Wall -g -O2  -c C-CODE/swiftstat7_r.c -o C-CODE/swiftstat7_r.o
+C-CODE/swiftstat7_r.c:13:9: warning: 'error' macro redefined [-Wmacro-redefined]
+#define error(code, ...) Rf_error( /* ignore the error code */ __VA_ARGS__ )
+        ^
+/Library/Frameworks/R.framework/Resources/include/R_ext/Error.h:64:9: note: previous definition is here
+#define error Rf_error
+        ^
+In file included from C-CODE/swiftstat7_r.c:16:
+In file included from C-CODE/swiftstat7_api.c:59:
+C-CODE/array.c:142:8: warning: unused variable 'j' [-Wunused-variable]
+        int i,j,k;
+              ^
+C-CODE/array.c:142:10: warning: unused variable 'k' [-Wunused-variable]
+        int i,j,k;
+                ^
+In file included from C-CODE/swiftstat7_r.c:16:
+C-CODE/swiftstat7_api.c:65:2: warning: You have not specified a random number generator. Using RANGEN_MT by default. [-W#warnings]
+#warning You have not specified a random number generator. Using RANGEN_MT by default.
+ ^
+C-CODE/swiftstat7_api.c:85:2: warning: You have not explicitly disabled multithreading but no OpenMP support was detected. Therefore, this will now compile without multithreading support. If you want to use multithreading, please make sure to set the approporiate compiler flag (such as -fopenmp). If you want to avoid multithreading, please explicitly set DISABLE_THREADS (e.g., -D DISABLE_THREADS) to confirm you want to disable multithreading and suppress this warning. [-W#warnings]
+#warning You have not explicitly disabled multithreading but no OpenMP support was detected. Therefore, this will now compile without multithreading support. If you want to use multithreading, please make sure to set the approporiate compiler flag (such as -fopenmp). If you want to avoid multithreading, please explicitly set DISABLE_THREADS (e.g., -D DISABLE_THREADS) to confirm you want to disable multithreading and suppress this warning.
+ ^
+In file included from C-CODE/swiftstat7_r.c:16:
+In file included from C-CODE/swiftstat7_api.c:454:
+C-CODE/gaengine9a.c:47:2: warning: You have not specified a lexrate module. Using LEXRATE_INVPARAB by default. [-W#warnings]
+#warning You have not specified a lexrate module. Using LEXRATE_INVPARAB by default.
+ ^
+C-CODE/gaengine9a.c:60:2: warning: You have not specified a saccade execution module. Using EXECSACC_INVGAMMA by default. [-W#warnings]
+#warning You have not specified a saccade execution module. Using EXECSACC_INVGAMMA by default.
+ ^
+In file included from C-CODE/swiftstat7_r.c:16:
+In file included from C-CODE/swiftstat7_api.c:454:
+In file included from C-CODE/gaengine9a.c:61:
+C-CODE/execsacc_gamma.c:194:21: warning: 'SWIFT_VARIANT_EXECSACC' macro redefined [-Wmacro-redefined]
+            #define SWIFT_VARIANT_EXECSACC "rtgamma-exact"
+                    ^
+C-CODE/execsacc_gamma.c:19:9: note: previous definition is here
+#define SWIFT_VARIANT_EXECSACC "rtgamma2"
+        ^
+C-CODE/execsacc_gamma.c:31:17: warning: unused variable 'w' [-Wunused-variable]
+    int      l, w, type;
+                ^
+In file included from C-CODE/swiftstat7_r.c:16:
+In file included from C-CODE/swiftstat7_api.c:454:
+In file included from C-CODE/gaengine9a.c:68:
+C-CODE/logliktimer4.c:24:21: warning: variable 'ix_curfixstart' set but not used [-Wunused-but-set-variable]
+    int         ix, ix_curfixstart;
+                    ^
+In file included from C-CODE/swiftstat7_r.c:16:
+In file included from C-CODE/swiftstat7_api.c:454:
+C-CODE/gaengine9a.c:367:19: warning: unused variable 'dynfac' [-Wunused-variable]
+        double    dynfac, inhibrate;
+                  ^
+C-CODE/gaengine9a.c:368:32: warning: variable 'saccerr' set but not used [-Wunused-but-set-variable]
+        double    inhib, kpos, saccerr, disptime, labrate;
+                               ^
+C-CODE/gaengine9a.c:372:46: warning: variable 'lastprob' set but not used [-Wunused-but-set-variable]
+        double    ifovea, iparafovea, ptheo, lastprob;
+                                             ^
+C-CODE/gaengine9a.c:382:36: warning: variable 'num' set but not used [-Wunused-but-set-variable]
+        int       lab, nlab, sacc, num, misloc, mis, Nrefix = 0;
+                                   ^
+C-CODE/gaengine9a.c:382:41: warning: variable 'misloc' set but not used [-Wunused-but-set-variable]
+        int       lab, nlab, sacc, num, misloc, mis, Nrefix = 0;
+                                        ^
+C-CODE/gaengine9a.c:382:49: warning: unused variable 'mis' [-Wunused-variable]
+        int       lab, nlab, sacc, num, misloc, mis, Nrefix = 0;
+                                                ^
+C-CODE/gaengine9a.c:382:54: warning: variable 'Nrefix' set but not used [-Wunused-but-set-variable]
+        int       lab, nlab, sacc, num, misloc, mis, Nrefix = 0;
+                                                     ^
+C-CODE/gaengine9a.c:384:48: warning: variable 'canc' set but not used [-Wunused-but-set-variable]
+        int       endsw_sentence, endsw_trial, canc;
+                                               ^
+C-CODE/gaengine9a.c:386:43: warning: unused variable 's0' [-Wunused-variable]
+        int       i, j, k, l, last, r, s, s0, w, n_hist, trans_point;
+                                          ^
+C-CODE/gaengine9a.c:389:28: warning: variable 't_l' set but not used [-Wunused-but-set-variable]
+        double    t = 0.0, t_l, t_n, t_i, t_fix;
+                           ^
+C-CODE/gaengine9a.c:389:33: warning: variable 't_n' set but not used [-Wunused-but-set-variable]
+        double    t = 0.0, t_l, t_n, t_i, t_fix;
+                                ^
+C-CODE/gaengine9a.c:389:38: warning: variable 't_i' set but not used [-Wunused-but-set-variable]
+        double    t = 0.0, t_l, t_n, t_i, t_fix;
+                                     ^
+C-CODE/gaengine9a.c:304:9: warning: unused variable 'n_threads' [-Wunused-variable]
+    int n_threads = 1;
+        ^
+C-CODE/gaengine9a.c:318:15: warning: variable 'sum_Pmisloc' set but not used [-Wunused-but-set-variable]
+    double    sum_Pmisloc = 0.0;
+              ^
+C-CODE/gaengine9a.c:319:15: warning: variable 'Nmisloc' set but not used [-Wunused-but-set-variable]
+    int       Nmisloc = 0;
+              ^
+C-CODE/gaengine9a.c:320:15: warning: variable 'Nfix_total' set but not used [-Wunused-but-set-variable]
+    int       Nfix_total = 0;
+              ^
+C-CODE/gaengine9a.c:1145:104: warning: variable 'prevact' is uninitialized when used here [-Wuninitialized]
+                                len[k],freq[k],pred[k],w,n1[k],nf1[k],n2[k],nf2[k],testreg,mat[i][3],0,prevact,disptime,tvec[i]);
+                                                                                                       ^~~~~~~
+C-CODE/gaengine9a.c:369:44: note: initialize the variable 'prevact' to silence this warning
+        double    presaclen, Pcomb, prevact;
+                                           ^
+                                            = 0.0
+C-CODE/gaengine9a.c:1145:112: warning: variable 'disptime' is uninitialized when used here [-Wuninitialized]
+                                len[k],freq[k],pred[k],w,n1[k],nf1[k],n2[k],nf2[k],testreg,mat[i][3],0,prevact,disptime,tvec[i]);
+                                                                                                               ^~~~~~~~
+C-CODE/gaengine9a.c:368:49: note: initialize the variable 'disptime' to silence this warning
+        double    inhib, kpos, saccerr, disptime, labrate;
+                                                ^
+                                                 = 0.0
+C-CODE/gaengine9a.c:1142:29: warning: variable 'dispfix' is uninitialized when used here [-Wuninitialized]
+                    if ( i==dispfix )  {
+                            ^~~~~~~
+C-CODE/gaengine9a.c:385:54: note: initialize the variable 'dispfix' to silence this warning
+        int       presac, testreg, firstpass, dispfix;
+                                                     ^
+                                                      = 0
+C-CODE/gaengine9a.c:948:45: warning: variable 'misloc' is uninitialized when used here [-Wuninitialized]
+                    if ( intended!=k_fix )  misloc++;
+                                            ^~~~~~
+C-CODE/gaengine9a.c:382:47: note: initialize the variable 'misloc' to silence this warning
+        int       lab, nlab, sacc, num, misloc, mis, Nrefix = 0;
+                                              ^
+                                               = 0
+C-CODE/gaengine9a.c:947:21: warning: variable 'num' is uninitialized when used here [-Wuninitialized]
+                    num++;
+                    ^~~
+C-CODE/gaengine9a.c:382:39: note: initialize the variable 'num' to silence this warning
+        int       lab, nlab, sacc, num, misloc, mis, Nrefix = 0;
+                                      ^
+                                       = 0
+In file included from C-CODE/swiftstat7_r.c:16:
+C-CODE/swiftstat7_api.c:567:15: warning: unused variable 'k' [-Wunused-variable]
+    int n, j, k;
+              ^
+C-CODE/swiftstat7_api.c:1087:52: warning: unused variable 'file_proc1' [-Wunused-variable]
+    char file_fsim[PATH_MAX], file_fseq[PATH_MAX], file_proc1[PATH_MAX], file_proc2[PATH_MAX];
+                                                   ^
+C-CODE/swiftstat7_api.c:1087:74: warning: unused variable 'file_proc2' [-Wunused-variable]
+    char file_fsim[PATH_MAX], file_fseq[PATH_MAX], file_proc1[PATH_MAX], file_proc2[PATH_MAX];
+                                                                         ^
+C-CODE/swiftstat7_r.c:126:24: warning: passing 'const char *' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  if(!swift_load_model(inputPath, seqId, corpusId, seed, &m, 1)) {
+                       ^~~~~~~~~
+C-CODE/swiftstat7_api.c:931:28: note: passing argument to parameter 'environmentPath' here
+int swift_load_model(char *environmentPath, char *parmFile, char *corpusFile, uint64_t seed, swift_model **dat, int verbose)
+                           ^
+C-CODE/swiftstat7_r.c:126:35: warning: passing 'const char *' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  if(!swift_load_model(inputPath, seqId, corpusId, seed, &m, 1)) {
+                                  ^~~~~
+C-CODE/swiftstat7_api.c:931:51: note: passing argument to parameter 'parmFile' here
+int swift_load_model(char *environmentPath, char *parmFile, char *corpusFile, uint64_t seed, swift_model **dat, int verbose)
+                                                  ^
+C-CODE/swiftstat7_r.c:126:42: warning: passing 'const char *' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  if(!swift_load_model(inputPath, seqId, corpusId, seed, &m, 1)) {
+                                         ^~~~~~~~
+C-CODE/swiftstat7_api.c:931:67: note: passing argument to parameter 'corpusFile' here
+int swift_load_model(char *environmentPath, char *parmFile, char *corpusFile, uint64_t seed, swift_model **dat, int verbose)
+                                                                  ^
+C-CODE/swiftstat7_r.c:150:23: warning: passing 'const char *' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  if(!swift_load_data(inputPath, &d, 1)) {
+                      ^~~~~~~~~
+C-CODE/swiftstat7_api.c:1026:27: note: passing argument to parameter 'fixseqFile' here
+int swift_load_data(char *fixseqFile, swift_dataset **dat, int verbose)
+                          ^
+C-CODE/swiftstat7_r.c:175:9: warning: initializing 'char *' with an expression of type 'const char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  char* param_name = CHAR(STRING_ELT(AS_CHARACTER(arg2), 0));
+        ^            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C-CODE/swiftstat7_r.c:287:35: warning: passing 'const char *' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  int param_id = swift_find_param(param_name);
+                                  ^~~~~~~~~~
+C-CODE/swiftstat7_api.c:257:28: note: passing argument to parameter 'name' here
+int swift_find_param(char* name) {
+                           ^
+C-CODE/swiftstat7_r.c:371:21: warning: passing 'const char *' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  swift_generate(m, dir_name, seq_name, NULL, threads, 1, 0);
+                    ^~~~~~~~
+C-CODE/swiftstat7_api.c:1085:43: note: passing argument to parameter 'output_dir' here
+void swift_generate(swift_model* m, char* output_dir, char* seqname, int * items, unsigned int threads, int make_fixseqin, int verbose) {
+                                          ^
+C-CODE/swiftstat7_r.c:371:31: warning: passing 'const char *' to parameter of type 'char *' discards qualifiers [-Wincompatible-pointer-types-discards-qualifiers]
+  swift_generate(m, dir_name, seq_name, NULL, threads, 1, 0);
+                              ^~~~~~~~
+C-CODE/swiftstat7_api.c:1085:61: note: passing argument to parameter 'seqname' here
+void swift_generate(swift_model* m, char* output_dir, char* seqname, int * items, unsigned int threads, int make_fixseqin, int verbose) {
+                                                            ^
+42 warnings generated.
+clang -arch x86_64 -dynamiclib -Wl,-headerpad_max_install_names -undefined dynamic_lookup -single_module -multiply_defined suppress -L/Library/Frameworks/R.framework/Resources/lib -L/opt/R/x86_64/lib -o SIM/r/swiftstat7_r.so C-CODE/swiftstat7_r.o -F/Library/Frameworks/R.framework/.. -framework R -Wl,-framework -Wl,CoreFoundation
+--- END BUILD R MODULE ---

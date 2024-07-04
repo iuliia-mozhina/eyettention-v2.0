@@ -1,0 +1,6 @@
+pysetup.py
+C-CODE/swiftstat7_py.c
+swiftstat.egg-info/PKG-INFO
+swiftstat.egg-info/SOURCES.txt
+swiftstat.egg-info/dependency_links.txt
+swiftstat.egg-info/top_level.txt

@@ -1,45 +1,6 @@
-from collections import Counter
 from scasim import *
 import pandas as pd
-import random
-
-
-def sample_scanpaths(df, sent, count):
-    """
-  Samples scanpaths for a given sentence with a specified count.
-
-  Args:
-      df (pd.DataFrame): Dataframe containing scanpath data ('dur', 'word', 'loc', 'sent', 'subj').
-      sent (int): The sentence ID for which to sample scanpaths.
-      count (int): The number of scanpaths to sample.
-
-  Returns:
-      pd.dataframe: A DataFrame containing the sampled (or all) scanpaths
-                   for the specified sentence.
-  """
-    # Filter scanpaths for the current sentence
-    sentence_df = df[df['SN'] == sent]
-
-    # Get the number of available scanpaths for this sentence
-    available_count = len(sentence_df)
-
-    # Determine the actual number of scanpaths to return
-    if count > available_count:
-        print(
-            f"Requested count ({count}) exceeds available scanpaths ({available_count}) for sentence {sent}. Using all available scanpaths.")
-        actual_count = available_count
-    else:
-        actual_count = count
-
-    # Randomly sample n scanpaths from the available ones (if applicable)
-    if actual_count < available_count:
-        random_sp = random.sample(sentence_df['subj_id'].tolist(), actual_count)
-        result_df = sentence_df[sentence_df['subj_id'].isin(random_sp)]
-    else:
-        # Use all available scanpaths
-        result_df = sentence_df.copy()
-
-    return result_df
+from utils import *
 
 
 def uniform_fixation_model(dataset, df, min_dur, max_dur):
@@ -51,21 +12,33 @@ def uniform_fixation_model(dataset, df, min_dur, max_dur):
 
   Returns:
       pd.DataFrame: A dataframe with additional columns 'X', 'Y' (fixation coordinates)
-  """
+    """
     # Initialize an empty DataFrame to store sentence-level data
-    sentence_df = pd.DataFrame(columns=['SN', 'WORD', 'loc', 'dur'])
+    sentence_df = pd.DataFrame(columns=['SN', 'loc', 'dur', 'land_pos'])
     if dataset == "BSC":
         grouped_df = df.groupby('SN')['WORD'].apply(list)
     else:  # CELER
         grouped_df = df.groupby('sentenceid')['WORD_NORM'].apply(list)
     for sentence_num, sentence_words in grouped_df.items():
         num_words = len(sentence_words)
-        # Generate random indices (locations) for each word in the sentence
-        fixation_indices = np.random.randint(1, num_words + 1, size=num_words)
+        locations = []
+        current_location = 0
+        # Generate random saccades
+        while current_location != num_words + 1:  # iterate until we reach the EOS token
+            saccade = np.random.randint(-num_words, num_words + 2)  # predict a saccade
+            new_location = current_location + saccade  # update the fixation location
+
+            # only update the locations if it is valid
+            if 0 <= new_location <= num_words + 1:
+                locations.append(new_location)
+                current_location = new_location
+        locations = np.array(locations)
         # Generate random durations
-        durations = np.random.randint(min_dur, max_dur + 1, size=num_words)
+        durations = np.random.randint(min_dur, max_dur + 1, size=len(locations))
+        # Generate random landing positions
+        land_pos = np.random.uniform(low=0.0, high=1.0, size=len(locations))
         sentence_data = pd.DataFrame(
-            {'SN': sentence_num, 'WORD': sentence_words, 'loc': fixation_indices, 'dur': durations})
+            {'SN': sentence_num, 'loc': locations, 'dur': durations, 'land_pos': land_pos})
         sentence_df = sentence_df.append(sentence_data)
 
     sentence_df = sentence_df.reset_index(drop=True)
@@ -73,20 +46,29 @@ def uniform_fixation_model(dataset, df, min_dur, max_dur):
 
 
 def compute_uniform_bsc():
-    bsc_path = '.././Data/beijing-sentence-corpus/'
+    bsc_path = '../../Data/beijing-sentence-corpus/'
     info_path = os.path.join(bsc_path, 'BSC.Word.Info.v2.xlsx')
     bsc_emd_path = os.path.join(bsc_path, 'BSC.EMD/BSC.EMD.txt')
     eyemovement_df = pd.read_csv(bsc_emd_path, delimiter='\t')
+    eyemovement_df["land_pos"] = np.modf(eyemovement_df["fl"])[0]
 
-    # For duration prediction determine the min and max values based on the Q1 and Q3
-    # Calculate quartiles of the 'dur' column
-    q1 = eyemovement_df['dur'].quantile(0.25)
-    q3 = eyemovement_df['dur'].quantile(0.75)
-    # Filter data within the interquartile range (IQR)
-    filtered_df = eyemovement_df[(eyemovement_df['dur'] >= q1) & (eyemovement_df['dur'] <= q3)]
-    # Find the maximum and minimum values within the filtered data
-    max_dur = filtered_df['dur'].max()
-    min_dur = filtered_df['dur'].min()
+    # For duration prediction determine the min and max values
+    # Calculate IQR for the 'dur' column
+    Q1 = eyemovement_df["dur"].quantile(0.25)
+    Q3 = eyemovement_df["dur"].quantile(0.75)
+    IQR = Q3 - Q1
+
+    # Determine bounds for outliers
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # Filter durations within the bounds
+    filtered_durations = eyemovement_df["dur"][
+        (eyemovement_df["dur"] >= lower_bound) & (eyemovement_df["dur"] <= upper_bound)]
+
+    # Determine min_dur and max_dur
+    min_dur = filtered_durations.min()
+    max_dur = filtered_durations.max()
 
     df = pd.read_excel(info_path, 'word')
     all_subjects_df = pd.DataFrame()
@@ -100,29 +82,36 @@ def compute_uniform_bsc():
 
 
 def compute_uniform_celer():
-    eyemovement_df = pd.read_csv('.././Data/celer/data_v2.0/sent_fix.tsv', delimiter='\t')
+    eyemovement_df = pd.read_csv('../../Data/celer/data_v2.0/sent_fix.tsv', delimiter='\t')
     eyemovement_df['CURRENT_FIX_INTEREST_AREA_LABEL'] = eyemovement_df.CURRENT_FIX_INTEREST_AREA_LABEL.replace(
         '\t(.*)', '', regex=True)
-    word_info_df = pd.read_csv('.././Data/celer/data_v2.0/sent_ia.tsv', delimiter='\t')
+    word_info_df = pd.read_csv('../../Data/celer/data_v2.0/sent_ia.tsv', delimiter='\t')
     word_info_df['IA_LABEL'] = word_info_df.IA_LABEL.replace('\t(.*)', '', regex=True)
 
     # native speakers only
-    sub_metadata_path = '.././Data/celer/metadata.tsv'
+    sub_metadata_path = '../../Data/celer/metadata.tsv'
     sub_infor = pd.read_csv(sub_metadata_path, delimiter='\t')
     reader_list = sub_infor[sub_infor.L1 == 'English'].List.values
     eye_df_native = eyemovement_df[eyemovement_df['list'].isin(reader_list)].reset_index(drop=True)
     word_info_df = word_info_df[word_info_df['list'].isin(reader_list)].reset_index(drop=True)
 
-    # For duration prediction determine the min and max values based on the Q1 and Q3
-    # Calculate quartiles of the 'dur' column
-    q1 = eye_df_native['CURRENT_FIX_DURATION'].quantile(0.25)
-    q3 = eye_df_native['CURRENT_FIX_DURATION'].quantile(0.75)
-    # Filter data within the interquartile range (IQR)
-    filtered_df = eye_df_native[
-        (eye_df_native['CURRENT_FIX_DURATION'] >= q1) & (eye_df_native['CURRENT_FIX_DURATION'] <= q3)]
-    # Find the maximum and minimum values within the filtered data
-    max_dur = filtered_df['CURRENT_FIX_DURATION'].max()
-    min_dur = filtered_df['CURRENT_FIX_DURATION'].min()
+    # For duration prediction determine the min and max values
+    # Calculate IQR for the 'dur' column
+    Q1 = eye_df_native["CURRENT_FIX_DURATION"].quantile(0.25)
+    Q3 = eye_df_native["CURRENT_FIX_DURATION"].quantile(0.75)
+    IQR = Q3 - Q1
+
+    # Determine bounds for outliers
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # Filter durations within the bounds
+    filtered_durations = eye_df_native["CURRENT_FIX_DURATION"][
+        (eye_df_native["CURRENT_FIX_DURATION"] >= lower_bound) & (eye_df_native["CURRENT_FIX_DURATION"] <= upper_bound)]
+
+    # Determine min_dur and max_dur
+    min_dur = filtered_durations.min()
+    max_dur = filtered_durations.max()
 
     all_subjects_df = pd.DataFrame()
     # notice: Each sentence is recorded multiple times in file |word_info_df|.
@@ -132,59 +121,10 @@ def compute_uniform_celer():
     for subject_id in range(1, len(reader_list) + 1):  # 69 subjects (native speakers) in the CELER dataset
         CELER_pred = uniform_fixation_model("CELER", word_info_df.copy(), min_dur, max_dur)
         CELER_pred['subj_id'] = subject_id
+        print(CELER_pred)
         all_subjects_df = all_subjects_df.append(CELER_pred)
     all_subjects_df.to_csv('CELER_uniform_results.csv', index=False)
     return all_subjects_df
-
-
-def create_sp(dataset, df):
-    """
-        Creates a scanpath dictionary from the provided DataFrame with the following structure:
-
-        scanpath = {
-            'locations': [locations_list1, locations_list2, ...],  # List of location arrays for each sentence
-            'durations': [durations_list1, durations_list2, ...],  # List of duration lists for each sentence
-            'sent_id': [sent_id1, sent_id2, ...]                    # List of sentence IDs
-        }
-
-        Args:
-            df (pd.DataFrame): DataFrame containing scanpath data ('dur', 'word', 'loc', 'sent', 'subj').
-
-        Returns:
-            dict: The scanpath dictionary with locations, durations, and sentence IDs.
-        """
-    grouped_data = df.groupby(['subj_id', 'SN'])  # maybe group by subj and sn
-
-    locations = []
-    durations = []
-    sent_id = []
-
-    for _, subj_data in grouped_data:
-        locations.append(subj_data['loc'].to_numpy().astype(float))  # len(locations) = 9000
-        durations.append(subj_data['dur'].to_numpy().astype(int))  # len(durations) = 9000
-        sent_id.append(subj_data['SN'].iloc[0])  # 9000
-
-    scanpath = {
-        'locations': locations,
-        'durations': durations,
-        'sent_id': sent_id
-    }
-
-    for i, loc_array in enumerate(scanpath["locations"]):
-        loc_list = loc_array.tolist()
-        loc_list.insert(0, 0)
-        if dataset == "BSC":
-            loc_list.append(26)
-        else:  # CELER
-            loc_list.append(23)
-        scanpath["locations"][i] = np.array(loc_list)
-
-    for i, dur_array in enumerate(scanpath["durations"]):
-        dur_list = dur_array.tolist()
-        dur_list.insert(0, -0.0)
-        dur_list.append(-0.0)
-        scanpath["durations"][i] = dur_list
-    return scanpath
 
 
 def map_sentence_name(row, sent_dict):
@@ -193,29 +133,22 @@ def map_sentence_name(row, sent_dict):
     return mapped_name
 
 
-def evaluate_uniform_model(dataset, data_split):
+def evaluate_uniform_model(dataset, sp_human, landing_pos_mean, landing_pos_std, fix_dur_mean, fix_dur_std,
+                           landing_pos_mean_uniform, landing_pos_std_uniform, fix_dur_mean_uniform, fix_dur_std_uniform):
     if dataset == "BSC":
         results = pd.read_csv("BSC_uniform_results.csv")
-    else:  # CELER
-        results = pd.read_csv("CELER_uniform_results.csv")
-        with open('../../data_splits/CELER_sent_dict.txt', "r") as f:
+    else:  # celer
+        results = pd.read_csv("drive/MyDrive/baseline/Uniform/CELER_uniform_results.csv")  # actually without folder name
+        with open('drive/MyDrive/CELER_sent_dict.txt', "r") as f:  # ../../data_splits/
             data_str = f.read()
             sent_dict = ast.literal_eval(data_str)
-        results['SN'] = results.apply(map_sentence_name, axis=1, args=(sent_dict,))
+            results['SN'] = results.apply(map_sentence_name, axis=1, args=(sent_dict,))
 
-    # retrieve the original Eyettention test splits
-    sn_ids_test = []
-    with open(data_split, 'r') as file:
-        for line in file:
-            for number in line.strip().split(","):
-                number = number.replace(" ", "")
-                if number != "":
-                    sn_ids_test.append(int(number))
     # Count sentence occurrences in the test splits
-    sentence_counts = Counter(sn_ids_test)
+    sentence_counts = Counter(sp_human["sent_id"])
 
     sampled_dfs = []
-    for sent in set(sn_ids_test):
+    for sent in set(sp_human["sent_id"]):
         count = sentence_counts[sent]
         sampled_sp = sample_scanpaths(results, sent, count)
         sampled_dfs.append(sampled_sp)
@@ -225,23 +158,107 @@ def evaluate_uniform_model(dataset, data_split):
     # create a scanpath dict based on the results df
     scanpaths = create_sp(dataset, sp_df)
 
-    # load the most central scanpaths
+    # calculate central scasim scores
     if dataset == "BSC":
-        central_sp_path = "../../BSC_most_central_sp.txt"
-        scasim_scores = compute_scasim(central_sp_path, scanpaths)
+        central_sp_path = "drive/MyDrive/BSC_most_central_sp.txt"
+        central_scasim_scores = compute_central_scasim(central_sp_path, scanpaths)
     else:  # CELER
-        central_sp_path = "../../CELER_most_central_sp.txt"
-        scasim_scores = compute_scasim(central_sp_path, scanpaths, '../../data_splits/CELER_sent_dict.txt')
+        central_sp_path = "drive/MyDrive/CELER_most_central_sp.txt"  # ../..
+        central_scasim_scores = compute_central_scasim(central_sp_path, scanpaths,
+                                                           'drive/MyDrive/CELER_sent_dict.txt')  # ../../data_splits/
 
-    print("Mean Scasim score", np.mean(scasim_scores))
+    # calculate "normal" scasim scores
+    scasim_scores = compute_scasim(scanpaths, sp_human)
+
+    # calculate MSE scores for durations
+    dur_mse_scores = []
+    max_len_predicted = max(len(sp) for sp in scanpaths["durations"])
+    max_len_target = max(len(sp) for sp in sp_human["durations"])
+    max_len = max(max_len_predicted, max_len_target)
+    criterion = torch.nn.MSELoss(reduction='mean')
+    for predicted_sp, target_sp in zip(scanpaths["durations"], sp_human["durations"]):
+        # Pad shorter sequences with a chosen padding value (e.g., 0)
+        padding_len_predicted = max_len - len(predicted_sp)
+        predicted_sp_padded = predicted_sp + [0] * padding_len_predicted
+        padding_len_target = max_len - len(target_sp)
+        target_sp_padded = target_sp + [0] * padding_len_target
+
+        predicted_sp_padded = torch.tensor(predicted_sp_padded)
+        target_sp_padded = torch.tensor(target_sp_padded)
+
+        pad_mask = ~(target_sp_padded == 0)
+        predicted_sp_padded = predicted_sp_padded * pad_mask
+        target_sp_padded = target_sp_padded * pad_mask
+
+        # apply z-score normalisation
+        predicted_sp_padded = predicted_sp_padded / 1000
+        target_sp_padded = target_sp_padded / 1000
+        predicted_sp_padded = (predicted_sp_padded - fix_dur_mean_uniform) / fix_dur_std_uniform * pad_mask
+        target_sp_padded = (target_sp_padded - fix_dur_mean) / fix_dur_std * pad_mask
+
+        dur_mse = criterion(predicted_sp_padded[pad_mask], target_sp_padded[pad_mask])
+        dur_mse_scores.append(dur_mse.item())
+
+    # calculate MSE scores for landing pos
+    land_pos_mse_scores = []
+    max_len_predicted = max(len(sp) for sp in scanpaths["landing_pos"])
+    max_len_target = max(len(sp) for sp in sp_human["landing_pos"])
+    max_len = max(max_len_predicted, max_len_target)
+    criterion = torch.nn.MSELoss(reduction='mean')
+    for predicted_sp, target_sp in zip(scanpaths["landing_pos"], sp_human["landing_pos"]):
+        # Pad shorter sequences
+        padding_len_predicted = max_len - len(predicted_sp)
+        predicted_sp_padded = predicted_sp + [0] * padding_len_predicted
+        padding_len_target = max_len - len(target_sp)
+        target_sp_padded = target_sp + [0] * padding_len_target
+
+        predicted_sp_padded = torch.tensor(predicted_sp_padded)
+        target_sp_padded = torch.tensor(target_sp_padded)
+
+        pad_mask = ~(target_sp_padded == 0)
+        predicted_sp_padded = predicted_sp_padded * pad_mask
+        target_sp_padded = target_sp_padded * pad_mask
+
+        # apply z-score normalisation
+        predicted_sp_padded = (predicted_sp_padded - landing_pos_mean_uniform) / landing_pos_std_uniform * pad_mask
+        target_sp_padded = (target_sp_padded - landing_pos_mean) / landing_pos_std * pad_mask
+
+        land_pos_mse = criterion(predicted_sp_padded[pad_mask], target_sp_padded[pad_mask])
+        land_pos_mse_scores.append(land_pos_mse.item())
+
+    # calculate NLL scores for locations
+    nll_scores = []
+    max_len_predicted = max(len(sp) for sp in scanpaths["locations"])
+    max_len_target = max(len(sp) for sp in sp_human["locations"])
+    max_len = max(max_len_predicted, max_len_target)
+    for predicted_sp, target_sp in zip(scanpaths["locations"], sp_human["locations"]):
+        # Pad shorter sequences with a chosen padding value (e.g., 0)
+        padding_len_predicted = max_len - len(predicted_sp)
+        predicted_sp_padded = predicted_sp.tolist() + [0] * padding_len_predicted
+        padding_len_target = max_len - len(target_sp)
+        target_sp_padded = target_sp + [0] * padding_len_target
+
+        predicted_sp_padded = torch.tensor(predicted_sp_padded)
+        target_sp_padded = torch.tensor(target_sp_padded)
+
+        pad_mask = ~(target_sp_padded == 0)
+        predicted_sp_padded = predicted_sp_padded * pad_mask
+        target_sp_padded = target_sp_padded * pad_mask
+
+        nll_score = torch.nn.functional.nll_loss(
+            torch.nn.functional.log_softmax(predicted_sp_padded[pad_mask], dim=0), target_sp_padded[pad_mask],
+            ignore_index=0)
+        nll_scores.append(nll_score.item())
+
+    return central_scasim_scores, scasim_scores, dur_mse_scores, land_pos_mse_scores, nll_scores
 
 
-if __name__ == "__main__":
-    compute_uniform_bsc()
-    compute_uniform_celer()
-    evaluate_uniform_model("BSC", '../../data_splits/BSC/BSC_new_sentence_splits.txt')
-    evaluate_uniform_model("BSC", '../../data_splits/BSC/BSC_new_subject_splits.txt')
-    evaluate_uniform_model("BSC", '../../data_splits/BSC/BSC_NRS_split.txt')
-    evaluate_uniform_model("CELER", '../../data_splits/CELER/CELER_new_sentence_splits.txt')
-    evaluate_uniform_model("CELER", '../../data_splits/CELER/CELER_new_reader_splits.txt')
-    evaluate_uniform_model("CELER", '../../data_splits/CELER/CELER_NRS_split.txt')
+def compute_mean_std_uniform(simulation_results):
+    df = pd.read_csv(simulation_results)
+    mean_dur = df['dur'].mean()
+    sd_dur = df['dur'].std()
+
+    mean_land_pos = df['land_pos'].mean()
+    sd_land_pos = df['land_pos'].std()
+
+    return mean_dur, sd_dur, mean_land_pos, sd_land_pos

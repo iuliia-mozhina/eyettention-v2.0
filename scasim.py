@@ -1,10 +1,10 @@
 # Adapted implementation of Malsburg
 # for details see R implementation: https://github.com/tmalsburg/scanpath/blob/master/scanpath/R/scanpath.R
 from math import acos, sin, cos, pi
-from collections import Counter
 from utils import *
 import ast
 import json
+from collections import Counter
 
 
 def modify_landing_pos(sp_human):
@@ -55,7 +55,7 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
     random_sp["sent_id"] = []
 
     if dataset == 'BSC':
-        dataset_path = '././Data/beijing-sentence-corpus/'
+        dataset_path = 'drive/MyDrive/beijing-sentence-corpus/'  # TODO: to change the path '././Data/beijing-sentence-corpus/'
         bsc_emd_path = os.path.join(dataset_path, 'BSC.EMD/BSC.EMD.txt')
         eyemovement_df = pd.read_csv(bsc_emd_path, delimiter='\t')
         info_path = os.path.join(dataset_path, 'BSC.Word.Info.v2.xlsx')
@@ -98,10 +98,10 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
                 random_sp["sent_id"].append(sn_id)
 
     elif dataset == "CELER":
-        eyemovement_df = pd.read_csv('././Data/celer/data_v2.0/sent_fix.tsv', delimiter='\t') 
+        eyemovement_df = pd.read_csv('drive/MyDrive/celer/sent_fix.tsv', delimiter='\t')  # TODO ././Data/celer/
         eyemovement_df['CURRENT_FIX_INTEREST_AREA_LABEL'] = eyemovement_df.CURRENT_FIX_INTEREST_AREA_LABEL.replace(
             '\t(.*)', '', regex=True)
-        word_info_df = pd.read_csv('././Data/celer/data_v2.0/sent_ia.tsv', delimiter='\t')
+        word_info_df = pd.read_csv('drive/MyDrive/celer/sent_ia.tsv', delimiter='\t')
         word_info_df['IA_LABEL'] = word_info_df.IA_LABEL.replace('\t(.*)', '', regex=True)
 
         with open(sent_dict_path, "r") as f:  # '././data_splits/CELER_sent_dict.txt'
@@ -225,7 +225,7 @@ def filter_sp(sp):
     sp["locations"] = filtered_locations
     sp["landing_pos"] = filtered_landing_pos
     return sp
-    
+
 
 def which_min(*l):
     mi = 0
@@ -448,7 +448,6 @@ def compute_central_sp(dataset, dataset_path):
 
             # if a sentence was read by more than 1 subject
             if len(grouped_scanpaths) > 1:
-                print(len(grouped_scanpaths))
                 dissimilarity_matrix = []  # Compute dissimilarity matrix
                 for i, sp1 in enumerate(grouped_scanpaths):
                     total_dissimilarity = 0

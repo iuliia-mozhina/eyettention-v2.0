@@ -90,6 +90,8 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
     SP_input_ids, SP_attention_mask = [], []
     SP_ordinal_pos, SP_landing_pos, SP_fix_dur = [], [], []
     sub_id_list = []
+    all_durations = []
+    all_land_pos = []
     for sn_id in sn_list:
         # process sentence sequence
         sn_df = eyemovement_df[eyemovement_df.sn == sn_id]
@@ -124,6 +126,7 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
             sp_word_pos, sp_fix_loc, sp_fix_dur = sub_df.wn.values, sub_df.fl.values, sub_df.dur.values
             sp_landing_pos_char = np.modf(sp_fix_loc)[0]
             SP_landing_pos.append(sp_landing_pos_char)
+            all_land_pos.extend(sp_landing_pos_char)
 
             # Convert word-based ordinal positions to token(character)-based ordinal positions
             # When the fixated word index is less than 0, set it to 0
@@ -132,6 +135,7 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
                               enumerate(sp_word_pos)]
             SP_ordinal_pos.append(sp_ordinal_pos)
             SP_fix_dur.append(sp_fix_dur)
+            all_durations.extend(sp_fix_dur)
 
             # tokenization and padding for scanpath, i.e. fixated word sequence
             sp_token = [sn_str[int(i - 1)] for i in sp_ordinal_pos]
@@ -172,11 +176,17 @@ def _process_BSC_corpus(sn_list, reader_list, word_info_df, eyemovement_df, toke
     sub_id_list = np.asarray(sub_id_list, dtype=np.int64)
     SN_ids = np.asarray(SN_ids, dtype=np.int64)
 
+    max_dur = np.max(all_durations)
+    min_dur = np.min(all_durations)
+    max_land_pos = np.max(all_land_pos)
+    min_land_pos = np.min(all_land_pos)
+
     data = {"SN_input_ids": SN_input_ids, "SN_attention_mask": SN_attention_mask, "SN_WORD_len": SN_WORD_len,
             "SP_input_ids": SP_input_ids, "SP_attention_mask": SP_attention_mask,
             "SP_ordinal_pos": np.array(SP_ordinal_pos), "SP_landing_pos": np.array(SP_landing_pos),
             "SP_fix_dur": np.array(SP_fix_dur),
-            "sub_id": sub_id_list, "SN_ids": SN_ids, "SN_pred": SN_pred, "SN_word_freq": SN_word_freq}
+            "sub_id": sub_id_list, "SN_ids": SN_ids, "SN_pred": SN_pred, "SN_word_freq": SN_word_freq, "max_dur": max_dur, "min_dur": min_dur,
+            "max_land_pos": max_land_pos, "min_land_pos": min_land_pos}
 
     return data
 
@@ -627,7 +637,7 @@ def _process_zuco(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer,
         sn_str = '[CLS] ' + sn_str + ' [SEP]'
         sn_len = len(sn_str.split())
         # compute word length for each word
-        sn_word_len = compute_word_length_celer(sn.word_len.values)
+        sn_word_len = compute_word_length_celer(sn.word_len.values) # todo
 
         # pre-tokenize sentence input
         tokenizer.padding_side = 'right'
@@ -866,10 +876,10 @@ def create_sp(dataset, df):
     sent_id = []
 
     for _, subj_data in grouped_data:
-        locations.append(subj_data['loc'].to_numpy().astype(float))  
-        durations.append(subj_data['dur'].to_numpy().astype(int))  
+        locations.append(subj_data['loc'].to_numpy().astype(float))  # len(locations) = 9000
+        durations.append(subj_data['dur'].to_numpy().astype(int))  # len(durations) = 9000
         landing_pos.append(subj_data['land_pos'].to_numpy().astype(float))
-        sent_id.append(subj_data['SN'].iloc[0])  
+        sent_id.append(subj_data['SN'].iloc[0])  # 9000
 
     scanpath = {
         'locations': locations,
@@ -899,4 +909,3 @@ def create_sp(dataset, df):
         land_pos_list.append(-0.0)
         scanpath["landing_pos"][i] = land_pos_list
     return scanpath
-    

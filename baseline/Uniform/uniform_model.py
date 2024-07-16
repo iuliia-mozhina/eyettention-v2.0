@@ -226,31 +226,7 @@ def evaluate_uniform_model(dataset, sp_human, landing_pos_mean, landing_pos_std,
         land_pos_mse = criterion(predicted_sp_padded[pad_mask], target_sp_padded[pad_mask])
         land_pos_mse_scores.append(land_pos_mse.item())
 
-    # calculate NLL scores for locations
-    nll_scores = []
-    max_len_predicted = max(len(sp) for sp in scanpaths["locations"])
-    max_len_target = max(len(sp) for sp in sp_human["locations"])
-    max_len = max(max_len_predicted, max_len_target)
-    for predicted_sp, target_sp in zip(scanpaths["locations"], sp_human["locations"]):
-        # Pad shorter sequences with a chosen padding value (e.g., 0)
-        padding_len_predicted = max_len - len(predicted_sp)
-        predicted_sp_padded = predicted_sp.tolist() + [0] * padding_len_predicted
-        padding_len_target = max_len - len(target_sp)
-        target_sp_padded = target_sp + [0] * padding_len_target
-
-        predicted_sp_padded = torch.tensor(predicted_sp_padded)
-        target_sp_padded = torch.tensor(target_sp_padded)
-
-        pad_mask = ~(target_sp_padded == 0)
-        predicted_sp_padded = predicted_sp_padded * pad_mask
-        target_sp_padded = target_sp_padded * pad_mask
-
-        nll_score = torch.nn.functional.nll_loss(
-            torch.nn.functional.log_softmax(predicted_sp_padded[pad_mask], dim=0), target_sp_padded[pad_mask],
-            ignore_index=0)
-        nll_scores.append(nll_score.item())
-
-    return central_scasim_scores, scasim_scores, dur_mse_scores, land_pos_mse_scores, nll_scores
+    return central_scasim_scores, scasim_scores, dur_mse_scores, land_pos_mse_scores
 
 
 def compute_mean_std_uniform(simulation_results):
@@ -262,3 +238,9 @@ def compute_mean_std_uniform(simulation_results):
     sd_land_pos = df['land_pos'].std()
 
     return mean_dur, sd_dur, mean_land_pos, sd_land_pos
+
+
+def construct_uniform_tensor(location_preds_test):
+    batch_size, seq_len, step_size = location_preds_test.shape
+    uniform_tensor = torch.full((batch_size, seq_len, step_size), 1 / step_size)
+    return uniform_tensor.numpy()

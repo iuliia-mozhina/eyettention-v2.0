@@ -55,7 +55,7 @@ class Eyettention(nn.Module):
         # computes attention weights between the current hidden state of the fixation-sequence encoder (ht)
         # and the output from the word-sequence encoder (hs).
         self.attn = nn.Linear(self.hidden_size,
-                              self.hidden_size + 1)  # +3 account for the word length, word freq and predictability features
+                              self.hidden_size + 1)
 
         # Decoder
         # Location prediction head
@@ -81,7 +81,7 @@ class Eyettention(nn.Module):
         self.decoder_duration = nn.Sequential(
             self.dropout_duration,
             # the input is the output of decoder_cell8 after attention and output of decoder_dense
-            nn.Linear(self.hidden_size * 2 + 1 + (self.cf["max_sn_len"] * 2 - 3), 512),  # was + 3
+            nn.Linear(self.hidden_size * 2 + 1 + (self.cf["max_sn_len"] * 2 - 3), 512),
             nn.ReLU(),
             self.dropout_duration,
             nn.Linear(512, 256),
@@ -100,7 +100,7 @@ class Eyettention(nn.Module):
         self.decoder_landing_pos = nn.Sequential(
             self.dropout_landing_pos,
             # the input is the output of decoder_cell8 after attention and output of decoder_dense
-            nn.Linear(self.hidden_size * 2 + 1 + (self.cf["max_sn_len"] * 2 - 3), 256),  # was + 3
+            nn.Linear(self.hidden_size * 2 + 1 + (self.cf["max_sn_len"] * 2 - 3), 256),
             nn.ReLU(),
             self.dropout_landing_pos,
             nn.Linear(256, 128),
@@ -108,7 +108,7 @@ class Eyettention(nn.Module):
             self.dropout_landing_pos,
             nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(128, 1)  # Output single value for fixation duration
+            nn.Linear(128, 1)  # Output single value for landing position
         )
 
         # for scanpath generation
@@ -528,7 +528,7 @@ class Eyettention_readerID(nn.Module):
         self.dropout_LSTM = nn.Dropout(0.2)
 
         # Cross-Attention
-        self.attn = nn.Linear(self.hidden_size, self.hidden_size + 1)  # +1 acoount for the word length feature
+        self.attn = nn.Linear(self.hidden_size, self.hidden_size + 1)
 
         # Locations prediction head
         # initialize five dense layers
@@ -546,7 +546,7 @@ class Eyettention_readerID(nn.Module):
             self.dropout_dense,
             nn.Linear(256, 256),
             nn.ReLU(),
-            nn.Linear(256, self.cf["max_sn_len"] * 2 - 3),  # number of output classes
+            nn.Linear(256, self.cf["max_sn_len"] * 2 - 3),
         )
 
         # Duration prediction head
@@ -554,7 +554,7 @@ class Eyettention_readerID(nn.Module):
         self.decoder_duration = nn.Sequential(
             self.dropout_duration,
             # the input is the output of decoder_cell8 after attention and output of decoder_dense
-            nn.Linear(self.hidden_size * 2 + 1 + (self.cf["max_sn_len"] * 2 - 3), 512),  # was + 3
+            nn.Linear(self.hidden_size * 2 + 1 + (self.cf["max_sn_len"] * 2 - 3), 512),
             nn.ReLU(),
             self.dropout_duration,
             nn.Linear(512, 256),
@@ -573,7 +573,7 @@ class Eyettention_readerID(nn.Module):
         self.decoder_landing_pos = nn.Sequential(
             self.dropout_landing_pos,
             # the input is the output of decoder_cell8 after attention and output of decoder_dense
-            nn.Linear(self.hidden_size * 2 + 1 + (self.cf["max_sn_len"] * 2 - 3), 256),  # was + 3
+            nn.Linear(self.hidden_size * 2 + 1 + (self.cf["max_sn_len"] * 2 - 3), 256),
             nn.ReLU(),
             self.dropout_landing_pos,
             nn.Linear(256, 128),
@@ -581,7 +581,7 @@ class Eyettention_readerID(nn.Module):
             self.dropout_landing_pos,
             nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(128, 1)  # Output single value for fixation duration
+            nn.Linear(128, 1)  # Output single value for landing position
         )
 
         # for scanpath generation

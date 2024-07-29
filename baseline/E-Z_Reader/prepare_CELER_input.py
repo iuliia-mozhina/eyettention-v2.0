@@ -4,18 +4,6 @@ from utils import *
 
 
 def calculate_bert_cloze_prob(word, sentence, tokenizer, model):
-    """
-  Calculates a cloze probability using BERT.
-
-  Args:
-      word: The word for which to calculate the cloze probability.
-      sentence: The sentence containing the word.
-      tokenizer: The BERT tokenizer.
-      model: The BERT model.
-
-  Returns:
-      A float representing the cloze probability (higher probability indicates the model is more likely to predict the original word).
-  """
     try:
         # convert the first word of a sentence to lowercase
         if sentence[0].isupper():
@@ -65,9 +53,7 @@ def modify_celer_input():
     modified_word_column = []
     word_column = df['WORD']
     sentence_number_column = df['SENT']
-    # Iterate through each row of the DataFrame
     for i, word in enumerate(word_column):
-        # Append the word to the modified_word_column
         modified_word_column.append(word)
         # Check if the sentence number changes or it's the last row
         if i == len(df) - 1 or (i < len(df) - 1 and sentence_number_column[i] != sentence_number_column[i + 1]):

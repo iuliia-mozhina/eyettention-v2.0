@@ -3,12 +3,10 @@
 from math import acos, sin, cos, pi
 from utils import *
 import ast
-import json
 from collections import Counter
 
 
 def modify_landing_pos(sp_human):
-    """Converts elements in each list of sp_human['landing_pos'] (except first & last) to floats with 7 decimals."""
     for i in range(len(sp_human["landing_pos"])):
         landing_pos = sp_human["landing_pos"][i]
         # Convert elements except first and last to floats with 7 decimals
@@ -19,31 +17,14 @@ def modify_landing_pos(sp_human):
 
 
 def convert_sp_to_lists(sp):
-    """Converts values in sp_dnn dictionary to regular lists.
-
-  Args:
-      sp_dnn (dict): Dictionary with keys "locations" and "durations".
-          - Values can be lists of NumPy arrays or other nested structures.
-
-  Returns:
-      dict: The modified sp_dnn dictionary with all values converted to lists.
-  """
-
-    # Iterate through each key-value pair
     for key, value in sp.items():
-        # Check if the value is a list
         if isinstance(value, list):
-            # If it's a list, iterate through its elements
             new_value = []
             for element in value:
-                # Convert each element to a list (handles NumPy arrays or nested structures)
                 new_value.append(element.tolist() if hasattr(element, 'tolist') else element)
-            # Update the dictionary with the converted list
             sp[key] = new_value
         else:
-            # If the value is not a list, leave it unchanged (handles non-list values)
             pass
-
     return sp
 
 
@@ -55,7 +36,7 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
     random_sp["sent_id"] = []
 
     if dataset == 'BSC':
-        dataset_path = 'drive/MyDrive/beijing-sentence-corpus/'  # TODO: to change the path '././Data/beijing-sentence-corpus/'
+        dataset_path = '././Data/beijing-sentence-corpus/'
         bsc_emd_path = os.path.join(dataset_path, 'BSC.EMD/BSC.EMD.txt')
         eyemovement_df = pd.read_csv(bsc_emd_path, delimiter='\t')
         info_path = os.path.join(dataset_path, 'BSC.Word.Info.v2.xlsx')
@@ -98,10 +79,10 @@ def sample_random_sp(dataset, sp_human, sent_dict_path=None):
                 random_sp["sent_id"].append(sn_id)
 
     elif dataset == "CELER":
-        eyemovement_df = pd.read_csv('drive/MyDrive/celer/sent_fix.tsv', delimiter='\t')  # TODO ././Data/celer/
+        eyemovement_df = pd.read_csv('././Data/celer/sent_fix.tsv', delimiter='\t')
         eyemovement_df['CURRENT_FIX_INTEREST_AREA_LABEL'] = eyemovement_df.CURRENT_FIX_INTEREST_AREA_LABEL.replace(
             '\t(.*)', '', regex=True)
-        word_info_df = pd.read_csv('drive/MyDrive/celer/sent_ia.tsv', delimiter='\t')
+        word_info_df = pd.read_csv('././Data/celer/sent_ia.tsv', delimiter='\t')
         word_info_df['IA_LABEL'] = word_info_df.IA_LABEL.replace('\t(.*)', '', regex=True)
 
         with open(sent_dict_path, "r") as f:  # '././data_splits/CELER_sent_dict.txt'
@@ -236,13 +217,6 @@ def which_min(*l):
 
 
 def scasim(s, t, modulator=0.83):
-    # modulator 0.83 (by default) - specifies how spatial distances between fixations
-    # #' are assessed.  When set to 0, any spatial divergence of two
-    # #' compared scanpaths is penalized independently of its degree.  When
-    # #' set to 1, the scanpaths are compared only with respect to their
-    # #' temporal patterns.  The default value approximates the sensitivity
-    # #' to spatial distance found in the human visual system.
-
     # Prepare matrix:
     m, n = len(s), len(t)
     d = [list(map(lambda i: 0, range(n + 1))) for _ in range(m + 1)]

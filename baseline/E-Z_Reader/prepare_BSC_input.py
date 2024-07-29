@@ -28,6 +28,7 @@ for i, word in enumerate(word_column):
 # Transform the cloze probabilities from logit back to the odds
 p = 1 / (1 + np.exp(-2 * df['PRED']))
 
-result_df = pd.DataFrame({'WF_BLI': wf_bli_column, 'LEN': len_column, "PRED": p, "WORD": modified_word_column, "SENT": sentence_number_column})
+result_df = pd.DataFrame({'WF_BLI': wf_bli_column, 'LEN': len_column, "PRED": p, "WORD": modified_word_column,
+                          "SENT": sentence_number_column})
 
 result_df.to_csv('BSC.txt', sep='\t', index=False)

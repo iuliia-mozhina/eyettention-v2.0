@@ -1,19 +1,8 @@
 from scasim import *
-import pandas as pd
 from utils import *
 
 
 def uniform_fixation_model(dataset, df, min_dur, max_dur):
-    """
-  This function predicts fixation locations uniformly across a sentence.
-
-  Args:
-      df (pd.DataFrame): A pandas dataframe with columns 'WORD' and 'SN'
-
-  Returns:
-      pd.DataFrame: A dataframe with additional columns 'X', 'Y' (fixation coordinates)
-    """
-    # Initialize an empty DataFrame to store sentence-level data
     sentence_df = pd.DataFrame(columns=['SN', 'loc', 'dur', 'land_pos'])
     if dataset == "BSC":
         grouped_df = df.groupby('SN')['WORD'].apply(list)
@@ -134,12 +123,13 @@ def map_sentence_name(row, sent_dict):
 
 
 def evaluate_uniform_model(dataset, sp_human, landing_pos_mean, landing_pos_std, fix_dur_mean, fix_dur_std,
-                           landing_pos_mean_uniform, landing_pos_std_uniform, fix_dur_mean_uniform, fix_dur_std_uniform):
+                           landing_pos_mean_uniform, landing_pos_std_uniform, fix_dur_mean_uniform,
+                           fix_dur_std_uniform):
     if dataset == "BSC":
         results = pd.read_csv("BSC_uniform_results.csv")
     else:  # celer
-        results = pd.read_csv("drive/MyDrive/baseline/Uniform/CELER_uniform_results.csv")  # actually without folder name
-        with open('drive/MyDrive/CELER_sent_dict.txt', "r") as f:  # ../../data_splits/
+        results = pd.read_csv("CELER_uniform_results.csv")
+        with open('../../data_splits/CELER_sent_dict.txt', "r") as f:
             data_str = f.read()
             sent_dict = ast.literal_eval(data_str)
             results['SN'] = results.apply(map_sentence_name, axis=1, args=(sent_dict,))
@@ -160,12 +150,12 @@ def evaluate_uniform_model(dataset, sp_human, landing_pos_mean, landing_pos_std,
 
     # calculate central scasim scores
     if dataset == "BSC":
-        central_sp_path = "drive/MyDrive/BSC_most_central_sp.txt"
+        central_sp_path = "../../BSC_most_central_sp.txt"
         central_scasim_scores = compute_central_scasim(central_sp_path, scanpaths)
     else:  # CELER
-        central_sp_path = "drive/MyDrive/CELER_most_central_sp.txt"  # ../..
+        central_sp_path = "../../CELER_most_central_sp.txt"
         central_scasim_scores = compute_central_scasim(central_sp_path, scanpaths,
-                                                           'drive/MyDrive/CELER_sent_dict.txt')  # ../../data_splits/
+                                                       '../../data_splits/CELER_sent_dict.txt')
 
     # calculate "normal" scasim scores
     scasim_scores = compute_scasim(scanpaths, sp_human)
@@ -177,7 +167,7 @@ def evaluate_uniform_model(dataset, sp_human, landing_pos_mean, landing_pos_std,
     max_len = max(max_len_predicted, max_len_target)
     criterion = torch.nn.MSELoss(reduction='mean')
     for predicted_sp, target_sp in zip(scanpaths["durations"], sp_human["durations"]):
-        # Pad shorter sequences with a chosen padding value (e.g., 0)
+        # Pad shorter sequences
         padding_len_predicted = max_len - len(predicted_sp)
         predicted_sp_padded = predicted_sp + [0] * padding_len_predicted
         padding_len_target = max_len - len(target_sp)

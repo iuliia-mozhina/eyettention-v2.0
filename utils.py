@@ -22,8 +22,7 @@ def load_bsc() -> Tuple[pd.DataFrame, ...]:
     return word_info_df, pos_info_df, eyemovement_df
 
 
-def load_zuco():
-    zuco_path = './Data/zuco/task2/Matlab_files'  # train / eval only on NR task
+def load_zuco(zuco_path):
     word_info_path = zuco_path + '/Word_Infor.csv'
     word_info_df = pd.read_csv(word_info_path, sep='\t')
     scanpath_path = zuco_path + '/scanpath.csv'
@@ -42,8 +41,11 @@ def load_corpus(corpus):
         word_info_df = pd.read_csv('./Data/celer/data_v2.0/sent_ia.tsv', delimiter='\t')
         word_info_df['IA_LABEL'] = word_info_df.IA_LABEL.replace('\t(.*)', '', regex=True)
         return word_info_df, None, eyemovement_df
-    elif corpus == 'zuco':
-        word_info_df, eyemovement_df = load_zuco()
+    elif corpus == 'zuco1':
+        word_info_df, eyemovement_df = load_zuco('./Data/zuco/task2/Matlab_files')
+        return word_info_df, None, eyemovement_df
+    elif corpus == 'zuco2':
+        word_info_df, eyemovement_df = load_zuco('./Data/zuco2/task1/Matlab_files')
         return word_info_df, None, eyemovement_df
 
 
@@ -275,23 +277,15 @@ def eval_log_llh(dnn_out, label, pad_mask):
 
 
 def eval_mse(dnn_out, label, pad_mask):
-    """
-  Calculates the Mean Squared Error for each scanpath and returns a list.
-
-  Args:
-      dnn_out: A PyTorch tensor of model outputs.
-      label: A PyTorch tensor of labels.
-
-  Returns:
-      A list of MSE values for each scanpath.
-  """
     res = []
     # Create MSELoss criterion
-    criterion = torch.nn.MSELoss(reduction='mean')
+    criterion = torch.nn.MSELoss(reduction='sum')
     # For each scanpath calculate the MSE and append to results
     for sp_indx in range(dnn_out.shape[0]):
         out = criterion(dnn_out[sp_indx, :] * pad_mask[sp_indx, :],
                         label[sp_indx, :] * pad_mask[sp_indx, :])
+        non_padded_count = pad_mask[sp_indx, :].sum()
+        out = out / non_padded_count.item()
         res.append(out.item())
     return res
 
@@ -302,7 +296,7 @@ def revert_z_score_normalization(feature, data_list, mean, std):
         # Convert item to a PyTorch tensor
         item = torch.tensor(item)
         # Exclude the first and last values
-        values_to_revert = item[1:-1]  # Exclude first and last value
+        values_to_revert = item[1:-1]
 
         # Revert z-score normalization
         reverted_values = (values_to_revert * std) + mean
@@ -623,9 +617,10 @@ def _process_zuco(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer,
         # process sentence sequence
         sn_df = eyemovement_df[eyemovement_df.sn == sn_id]
         sn = word_info_df[word_info_df.SN == sn_id]
-        sn_str = ' '.join(sn.WORD.values)
-        sn_str = '[CLS] ' + sn_str + ' [SEP]'
+        words = sn.WORD.dropna().values
+        sn_str = ' '.join(words)
         sn_len = len(sn_str.split())
+        sn_str = '[CLS] ' + sn_str + ' [SEP]'
         # compute word length for each word
         sn_word_len = compute_word_length_celer(sn.word_len.values) # todo
 
@@ -650,7 +645,7 @@ def _process_zuco(sn_list, reader_list, word_info_df, eyemovement_df, tokenizer,
             sub_df = sn_df[sn_df.id == sub_id]
             # remove fixations on non-words
             sub_df = sub_df.loc[
-                sub_df.CURRENT_FIX_INTEREST_AREA_LABEL != '.']  # Label for the interest area to which the currentixation is assigned
+                sub_df.CURRENT_FIX_INTEREST_AREA_LABEL != '']  # Label for the interest area to which the currentixation is assigned
             if len(sub_df) == 0:
                 # no scanpath data found for the subject
                 continue
@@ -805,18 +800,6 @@ def gradient_clipping(dnn_model, clip=10):
 
 
 def sample_scanpaths(df, sent, count):
-    """
-  Samples scanpaths for a given sentence with a specified count.
-
-  Args:
-      df (pd.DataFrame): Dataframe containing scanpath data ('dur', 'word', 'loc', 'sent', 'subj').
-      sent (int): The sentence ID for which to sample scanpaths.
-      count (int): The number of scanpaths to sample.
-
-  Returns:
-      pd.dataframe: A DataFrame containing the sampled (or all) scanpaths
-                   for the specified sentence.
-  """
     # Filter scanpaths for the current sentence
     sentence_df = df[df['SN'] == sent]
 
@@ -831,7 +814,7 @@ def sample_scanpaths(df, sent, count):
     else:
         actual_count = count
 
-    # Randomly sample n scanpaths from the available ones (if applicable)
+    # Randomly sample n scanpaths from the available ones
     if actual_count < available_count:
         random_sp = random.sample(sentence_df['subj_id'].tolist(), actual_count)
         result_df = sentence_df[sentence_df['subj_id'].isin(random_sp)]
@@ -843,22 +826,7 @@ def sample_scanpaths(df, sent, count):
 
 
 def create_sp(dataset, df):
-    """
-        Creates a scanpath dictionary from the provided DataFrame with the following structure:
-
-        scanpath = {
-            'locations': [locations_list1, locations_list2, ...],  # List of location arrays for each sentence
-            'durations': [durations_list1, durations_list2, ...],  # List of duration lists for each sentence
-            'sent_id': [sent_id1, sent_id2, ...]                    # List of sentence IDs
-        }
-
-        Args:
-            df (pd.DataFrame): DataFrame containing scanpath data ('dur', 'word', 'loc', 'sent', 'subj').
-
-        Returns:
-            dict: The scanpath dictionary with locations, durations, and sentence IDs.
-        """
-    grouped_data = df.groupby(['subj_id', 'SN'])  # maybe group by subj and sn
+    grouped_data = df.groupby(['subj_id', 'SN'])
 
     locations = []
     durations = []
@@ -869,7 +837,7 @@ def create_sp(dataset, df):
         locations.append(subj_data['loc'].to_numpy().astype(float))
         durations.append(subj_data['dur'].to_numpy().astype(int))
         landing_pos.append(subj_data['land_pos'].to_numpy().astype(float))
-        sent_id.append(subj_data['SN'].iloc[0])  
+        sent_id.append(subj_data['SN'].iloc[0])
 
     scanpath = {
         'locations': locations,

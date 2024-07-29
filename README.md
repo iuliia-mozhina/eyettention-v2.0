@@ -45,6 +45,11 @@ Eyettention_BSC.ipynb
 Eyettention_BSC_NRS.ipynb
 ```
 
+3. Eyettention Reader 2.0
+```
+Eyettention_Reader_BSC.ipynb
+```
+
 ### Run experiments for English (CELER)
 1. New Sentence split & New Reader split
 ```
@@ -54,6 +59,10 @@ Eyettention_CELER.ipynb
 
 ```
 Eyettention_CELER_NRS.ipynb
+```
+3. Eyettention Reader 2.0
+```
+Eyettention_Reader_CELER.ipynb
 ```
 
 ### Run cross-dataset evaluation
